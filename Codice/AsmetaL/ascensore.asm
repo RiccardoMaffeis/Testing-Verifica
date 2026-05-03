@@ -4,14 +4,17 @@ import StandardLibrary
 
 signature:
 
+	// Domini numerici
 	domain Piano subsetof Integer
 	domain Timer subsetof Integer
 	
+	// Stati principali dell'ascensore
 	enum domain Direzione = {SU | GIU | NESSUNA} 
-    enum domain StatoCabina = {FERMA | IN_MOVIMENTO | BLOCCATA} 
-    enum domain StatoPorte = {APERTE | CHIUSE} 
-    enum domain StatoErrore = {NESSUNO | OVERLOAD | GUASTO} 
+	enum domain StatoCabina = {FERMA | IN_MOVIMENTO | BLOCCATA} 
+	enum domain StatoPorte = {APERTE | CHIUSE} 
+	enum domain StatoErrore = {NESSUNO | OVERLOAD | GUASTO} 
 	
+	// Input esterni
 	monitored chiamataPianoSu: Piano -> Boolean
 	monitored chiamataPianoGiu: Piano -> Boolean
 	monitored pulsanteInterno: Piano -> Boolean
@@ -19,6 +22,7 @@ signature:
 	monitored personeEntrate: Integer
 	monitored personeUscite: Integer
 	
+	// Variabili controllate dal sistema
 	controlled pianoCorrente: Piano
 	controlled statoCabina: StatoCabina
 	controlled statoPorte: StatoPorte
@@ -28,6 +32,7 @@ signature:
 	controlled timer: Timer
 	controlled numeroPersone: Integer
 	
+	// Costanti
 	static tMax: Integer
 	static capacitaMassima: Integer
 	static pianoMin: Piano
@@ -35,6 +40,7 @@ signature:
 
 definitions:
 
+	// Valori concreti dei domini e delle costanti
 	domain Piano = {-1:4}
 	domain Timer = {0:10}
 	
@@ -43,6 +49,7 @@ definitions:
 	function pianoMin = -1
 	function pianoMax = 4
 		
+	// Registra le richieste valide tra quelle attive
 	rule r_acquisisciRichieste =
 		forall $p in Piano with
 			pulsanteInterno($p) or
@@ -51,6 +58,7 @@ definitions:
 		do
 			richiesteAttive($p) := true
 			
+	// Aggiorna il numero di persone quando le porte sono aperte
 	rule r_aggiornaPersone =
 	    if statoPorte = APERTE and (statoCabina = FERMA or statoCabina = BLOCCATA) then
 	        if numeroPersone + personeEntrate - personeUscite >= 0 then
@@ -60,6 +68,7 @@ definitions:
 	        endif
 	    endif
 		
+	// Gestisce l'ingresso e l'uscita dallo stato OVERLOAD
 	rule r_gestisciOverload =
 		if numeroPersone > capacitaMassima then
 			par
@@ -78,6 +87,7 @@ definitions:
 			endif
 		endif
 		
+	// Gestisce l'ingresso in GUASTO e il timer di ripristino
 	rule r_gestisciGuasto =
 		if statoErrore = GUASTO then
 			if timer > 0 then
@@ -102,6 +112,7 @@ definitions:
 			endif
 		endif
 		
+	// Seleziona quale errore gestire, dando priorità all'OVERLOAD
 	rule r_gestisciErrori =
 	    if numeroPersone > capacitaMassima or statoErrore = OVERLOAD then
 	        r_gestisciOverload[]
@@ -109,12 +120,13 @@ definitions:
 	        r_gestisciGuasto[]
 	    endif	
 	
+	// Chiude le porte quando l'ascensore è fermo e operativo
 	rule r_chiudiPorte =
 	    if statoCabina = FERMA and statoPorte = APERTE and statoErrore = NESSUNO then
 	        statoPorte := CHIUSE
 	    endif
 
-
+	// Serve la richiesta relativa al piano corrente
 	rule r_serviPianoCorrente =
 	    if statoErrore = NESSUNO and richiesteAttive(pianoCorrente) then
 	        par
@@ -125,7 +137,7 @@ definitions:
 	        endpar
 	    endif
 
-
+	// Porta l'ascensore in stato di attesa
 	rule r_idle =
 	    par
 	        statoCabina := FERMA
@@ -133,6 +145,7 @@ definitions:
 	    endpar
 
 
+	// Determina la direzione in base alle richieste attive
 	rule r_scegliDirezione =
 	    if (exist $p0 in Piano with richiesteAttive($p0)) then
 	
@@ -169,6 +182,7 @@ definitions:
 	    endif
 
 
+	// Muove la cabina di un piano nella direzione scelta
 	rule r_muoviAscensore =
 	    if statoErrore = NESSUNO and statoPorte = CHIUSE then
 	
@@ -194,6 +208,7 @@ definitions:
 	    endif
 
 
+	 // Coordina il comportamento normale dell'ascensore
 	rule r_gestisciAscensore =
 	    if statoErrore = NESSUNO then
 	
