@@ -109,10 +109,10 @@ definitions:
 	        r_gestisciGuasto[]
 	    endif	
 	
-	rule r_gestisciAscensore =
+	/*rule r_gestisciAscensore =
 		if statoErrore = NESSUNO then
 			statoPorte := CHIUSE
-		endif
+		endif*/
 		
 	main rule r_main =
 	    seq
