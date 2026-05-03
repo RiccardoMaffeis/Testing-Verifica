@@ -109,10 +109,112 @@ definitions:
 	        r_gestisciGuasto[]
 	    endif	
 	
-	/*rule r_gestisciAscensore =
-		if statoErrore = NESSUNO then
-			statoPorte := CHIUSE
-		endif*/
+	rule r_chiudiPorte =
+	    if statoCabina = FERMA and statoPorte = APERTE and statoErrore = NESSUNO then
+	        statoPorte := CHIUSE
+	    endif
+
+
+	rule r_serviPianoCorrente =
+	    if statoErrore = NESSUNO and richiesteAttive(pianoCorrente) then
+	        par
+	            statoCabina := FERMA
+	            statoPorte := APERTE
+	            richiesteAttive(pianoCorrente) := false
+	            direzione := NESSUNA
+	        endpar
+	    endif
+
+
+	rule r_idle =
+	    par
+	        statoCabina := FERMA
+	        direzione := NESSUNA
+	    endpar
+
+
+	rule r_scegliDirezione =
+	    if (exist $p0 in Piano with richiesteAttive($p0)) then
+	
+	        if direzione = SU then
+	            if (exist $p1 in Piano with $p1 > pianoCorrente and richiesteAttive($p1)) then
+	                direzione := SU
+	            else if (exist $p2 in Piano with $p2 < pianoCorrente and richiesteAttive($p2)) then
+	                direzione := GIU
+	            else
+	                direzione := NESSUNA
+	            endif endif
+	
+	        else if direzione = GIU then
+	            if (exist $p3 in Piano with $p3 < pianoCorrente and richiesteAttive($p3)) then
+	                direzione := GIU
+	            else if (exist $p4 in Piano with $p4 > pianoCorrente and richiesteAttive($p4)) then
+	                direzione := SU
+	            else
+	                direzione := NESSUNA
+	            endif endif
+	
+	        else
+	            if (exist $p5 in Piano with $p5 > pianoCorrente and richiesteAttive($p5)) then
+	                direzione := SU
+	            else if (exist $p6 in Piano with $p6 < pianoCorrente and richiesteAttive($p6)) then
+	                direzione := GIU
+	            else
+	                direzione := NESSUNA
+	            endif endif
+	        endif endif
+	
+	    else
+	        direzione := NESSUNA
+	    endif
+
+
+	rule r_muoviAscensore =
+	    if statoErrore = NESSUNO and statoPorte = CHIUSE then
+	
+	        if direzione = SU and pianoCorrente < pianoMax then
+	            par
+	                pianoCorrente := pianoCorrente + 1
+	                statoCabina := IN_MOVIMENTO
+	            endpar
+	
+	        else if direzione = GIU and pianoCorrente > pianoMin then
+	            par
+	                pianoCorrente := pianoCorrente - 1
+	                statoCabina := IN_MOVIMENTO
+	            endpar
+	
+	        else
+	            par
+	                statoCabina := FERMA
+	                direzione := NESSUNA
+	            endpar
+	        endif endif
+	
+	    endif
+
+
+	rule r_gestisciAscensore =
+	    if statoErrore = NESSUNO then
+	
+	        if statoPorte = APERTE then
+	            r_chiudiPorte[]
+	
+	        else if richiesteAttive(pianoCorrente) then
+	            r_serviPianoCorrente[]
+	
+	        else if (exist $p in Piano with richiesteAttive($p)) then
+	            seq
+	                r_scegliDirezione[]
+	                r_muoviAscensore[]
+	            endseq
+	
+	        else
+	            r_idle[]
+	
+	        endif endif endif
+	
+	    endif
 		
 	main rule r_main =
 	    seq
