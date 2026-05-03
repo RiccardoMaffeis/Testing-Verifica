@@ -13,7 +13,8 @@ l'apertura e chiusura delle porte, il sovraccarico e la gestione dei guasti.
 
 L'obiettivo del progetto è modellare formalmente un ascensore mediante Abstract State Machines.
 
-Il sistema rappresenta una cabina che serve più piani dell'edificio e che, a ogni passo logico, decide se:
+Il sistema rappresenta una cabina che serve più piani dell'edificio e che, a ogni passo logico,
+decide se:
 
 - acquisire nuove richieste;
 - servire il piano corrente;
