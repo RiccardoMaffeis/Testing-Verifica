@@ -4,8 +4,8 @@
 
 Questo repository contiene il modello ASM di un sistema di ascensore a più piani con un'unica cabina.
 
-Il modello descrive il comportamento logico dell'ascensore, includendo la gestione delle richieste, il movimento tra piani,
-l'apertura e chiusura delle porte, il sovraccarico e la gestione dei guasti.
+Il modello descrive il comportamento logico dell'ascensore, includendo la gestione delle richieste,
+il movimento tra piani, l'apertura e chiusura delle porte, il sovraccarico e la gestione dei guasti.
 
 ---
 
