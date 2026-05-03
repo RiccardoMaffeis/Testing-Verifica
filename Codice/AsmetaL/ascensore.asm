@@ -12,9 +12,9 @@ signature:
     enum domain StatoPorte = {APERTE | CHIUSE} 
     enum domain StatoErrore = {NESSUNO | OVERLOAD | GUASTO} 
 	
-	monitored pulsanteInterno: Piano -> Boolean
 	monitored chiamataPianoSu: Piano -> Boolean
 	monitored chiamataPianoGiu: Piano -> Boolean
+	monitored pulsanteInterno: Piano -> Boolean
 	monitored eventoGuasto: Boolean
 	monitored personeEntrate: Integer
 	monitored personeUscite: Integer
@@ -32,9 +32,6 @@ signature:
 	static capacitaMassima: Integer
 	static pianoMin: Piano
 	static pianoMax: Piano
-	
-	//derived guastoAttivo: Boolean
-	//derived overloadAttivo: Boolean
 
 definitions:
 
@@ -45,12 +42,6 @@ definitions:
 	function capacitaMassima = 8
 	function pianoMin = -1
 	function pianoMax = 4
-	
-	/*function guastoAttivo = 
-		statoErrore = GUASTO*/
-	
-	/*function overloadAttivo =
-		statoErrore = OVERLOAD*/
 		
 	rule r_acquisisciRichieste =
 		forall $p in Piano with
@@ -61,11 +52,53 @@ definitions:
 			richiesteAttive($p) := true
 			
 	rule r_aggiornaPersone =
-		if statoCabina = FERMA and statoPorte = APERTE then
-			if numeroPersone + personeEntrate - personeUscite >= 0 then
-				numeroPersone := numeroPersone + personeEntrate - personeUscite
+	    if statoPorte = APERTE and (statoCabina = FERMA or statoCabina = BLOCCATA) then
+	        if numeroPersone + personeEntrate - personeUscite >= 0 then
+	            numeroPersone := numeroPersone + personeEntrate - personeUscite
+	        else
+	            numeroPersone := 0
+	        endif
+	    endif
+		
+	rule r_gestisciOverload =
+		if numeroPersone > capacitaMassima then
+			par
+				statoErrore := OVERLOAD
+				statoCabina := BLOCCATA
+				statoPorte := APERTE
+				direzione := NESSUNA
+			endpar
+		else if statoErrore = OVERLOAD and numeroPersone <= capacitaMassima then
+				par
+					statoErrore := NESSUNO
+					statoCabina := FERMA
+					statoPorte := CHIUSE
+					direzione := NESSUNA
+				endpar
+			endif
+		endif
+		
+	rule r_gestisciGuasto =
+		if statoErrore = GUASTO then
+			if timer > 0 then
+				timer := timer - 1
 			else
-				numeroPersone := 0
+				par
+					statoErrore := NESSUNO
+					statoCabina := FERMA
+					statoPorte := CHIUSE
+					direzione := NESSUNA
+					timer := 0
+				endpar
+			endif
+		else if eventoGuasto = true and statoErrore = NESSUNO then
+				par
+					statoErrore := GUASTO
+					statoCabina := BLOCCATA
+					statoPorte := CHIUSE
+					direzione := NESSUNA
+					timer := tMax
+				endpar
 			endif
 		endif
 		
@@ -74,20 +107,26 @@ definitions:
 	        r_gestisciOverload[]
 	    else
 	        r_gestisciGuasto[]
-	    endif
-			
-	//rule r_gestisciOverload =
-	//rule r_gestisciGuasto =
-	//rule r_gestisciAscensore =
+	    endif	
+	
+	rule r_gestisciAscensore =
+		if statoErrore = NESSUNO then
+			statoPorte := CHIUSE
+		endif
 		
 	main rule r_main =
-		seq
-			r_acquisisciRichieste[]
-			r_aggiornaPersone[]
-			r_gestisciErrori[]
-			r_gestisciAscensore[]
-		endseq
+	    seq
+	        if statoErrore != GUASTO then
+	            r_acquisisciRichieste[]
+	        endif
 	
+	        r_aggiornaPersone[]
+	        r_gestisciErrori[]
+	
+	        if statoErrore = NESSUNO then
+	            r_gestisciAscensore[]
+	        endif
+	    endseq
 		
 default init s0:
 
