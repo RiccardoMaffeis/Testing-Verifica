@@ -1,0 +1,55 @@
+scenario RisoluzioneOverload
+load ascensore.asm
+
+begin generaOverload
+	set eventoGuasto := false;
+	set personeEntrate := 0;
+	set personeUscite := 0;
+
+	set pulsanteInterno(-1) := false;
+	set pulsanteInterno(0) := true;
+	set pulsanteInterno(1) := false;
+	set pulsanteInterno(2) := false;
+	set pulsanteInterno(3) := false;
+	set pulsanteInterno(4) := false;
+
+	set chiamataPianoSu(-1) := false;
+	set chiamataPianoSu(0) := false;
+	set chiamataPianoSu(1) := false;
+	set chiamataPianoSu(2) := false;
+	set chiamataPianoSu(3) := false;
+	set chiamataPianoSu(4) := false;
+
+	set chiamataPianoGiu(-1) := false;
+	set chiamataPianoGiu(0) := false;
+	set chiamataPianoGiu(1) := false;
+	set chiamataPianoGiu(2) := false;
+	set chiamataPianoGiu(3) := false;
+	set chiamataPianoGiu(4) := false;
+
+	step
+
+	set pulsanteInterno(0) := false;
+	set personeEntrate := 9;
+	set personeUscite := 0;
+
+	step
+
+	check numeroPersone = 9;
+	check statoErrore = OVERLOAD;
+	check statoCabina = BLOCCATA;
+	check statoPorte = APERTE;
+end
+
+begin rimuoviOverload
+	set personeEntrate := 0;
+	set personeUscite := 1;
+
+	step
+
+	check numeroPersone = 8;
+	check statoErrore = NESSUNO;
+	check statoCabina = FERMA;
+	check statoPorte = CHIUSE;
+	check direzione = NESSUNA;
+end

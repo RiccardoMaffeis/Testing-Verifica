@@ -1,0 +1,47 @@
+scenario ConservazioneRichiesteGuasto
+load ascensore.asm
+
+begin acquisisciRichiestaPrimaDelGuasto
+	set eventoGuasto := false;
+	set personeEntrate := 0;
+	set personeUscite := 0;
+
+	set pulsanteInterno(-1) := false;
+	set pulsanteInterno(0) := false;
+	set pulsanteInterno(1) := false;
+	set pulsanteInterno(2) := false;
+	set pulsanteInterno(3) := true;
+	set pulsanteInterno(4) := false;
+
+	set chiamataPianoSu(-1) := false;
+	set chiamataPianoSu(0) := false;
+	set chiamataPianoSu(1) := false;
+	set chiamataPianoSu(2) := false;
+	set chiamataPianoSu(3) := false;
+	set chiamataPianoSu(4) := false;
+
+	set chiamataPianoGiu(-1) := false;
+	set chiamataPianoGiu(0) := false;
+	set chiamataPianoGiu(1) := false;
+	set chiamataPianoGiu(2) := false;
+	set chiamataPianoGiu(3) := false;
+	set chiamataPianoGiu(4) := false;
+
+	step
+
+	check richiesteAttive(3) = true;
+	check pianoCorrente = 1;
+end
+
+begin guastoConRichiestaGiaAttiva
+	set pulsanteInterno(3) := false;
+	set eventoGuasto := true;
+
+	step
+
+	check statoErrore = GUASTO;
+	check statoCabina = BLOCCATA;
+	check statoPorte = CHIUSE;
+	check direzione = NESSUNA;
+	check richiesteAttive(3) = true;
+end

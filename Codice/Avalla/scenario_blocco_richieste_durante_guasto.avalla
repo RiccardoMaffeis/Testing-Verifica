@@ -1,0 +1,48 @@
+scenario BloccoRichiesteDuranteGuasto
+load ascensore.asm
+
+begin generaGuasto
+	set eventoGuasto := true;
+	set personeEntrate := 0;
+	set personeUscite := 0;
+
+	set pulsanteInterno(-1) := false;
+	set pulsanteInterno(0) := false;
+	set pulsanteInterno(1) := false;
+	set pulsanteInterno(2) := false;
+	set pulsanteInterno(3) := false;
+	set pulsanteInterno(4) := false;
+
+	set chiamataPianoSu(-1) := false;
+	set chiamataPianoSu(0) := false;
+	set chiamataPianoSu(1) := false;
+	set chiamataPianoSu(2) := false;
+	set chiamataPianoSu(3) := false;
+	set chiamataPianoSu(4) := false;
+
+	set chiamataPianoGiu(-1) := false;
+	set chiamataPianoGiu(0) := false;
+	set chiamataPianoGiu(1) := false;
+	set chiamataPianoGiu(2) := false;
+	set chiamataPianoGiu(3) := false;
+	set chiamataPianoGiu(4) := false;
+
+	step
+
+	check statoErrore = GUASTO;
+	check timer = 10;
+end
+
+begin richiestaDuranteGuasto
+	set eventoGuasto := false;
+
+	set pulsanteInterno(4) := true;
+
+	step
+
+	check statoErrore = GUASTO;
+	check timer = 9;
+	check richiesteAttive(4) = false;
+	check statoCabina = BLOCCATA;
+	check statoPorte = CHIUSE;
+end

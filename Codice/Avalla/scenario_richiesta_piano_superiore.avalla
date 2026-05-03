@@ -1,0 +1,81 @@
+scenario RichiestaPianoSuperiore
+load ascensore.asm
+
+begin statoIniziale
+	check pianoCorrente = 0;
+	check statoCabina = FERMA;
+	check statoPorte = CHIUSE;
+	check direzione = NESSUNA;
+	check statoErrore = NESSUNO;
+	check richiesteAttive(3) = false;
+end
+
+begin richiestaInternaPiano3
+	set eventoGuasto := false;
+	set personeEntrate := 0;
+	set personeUscite := 0;
+
+	set pulsanteInterno(-1) := false;
+	set pulsanteInterno(0) := false;
+	set pulsanteInterno(1) := false;
+	set pulsanteInterno(2) := false;
+	set pulsanteInterno(3) := true;
+	set pulsanteInterno(4) := false;
+
+	set chiamataPianoSu(-1) := false;
+	set chiamataPianoSu(0) := false;
+	set chiamataPianoSu(1) := false;
+	set chiamataPianoSu(2) := false;
+	set chiamataPianoSu(3) := false;
+	set chiamataPianoSu(4) := false;
+
+	set chiamataPianoGiu(-1) := false;
+	set chiamataPianoGiu(0) := false;
+	set chiamataPianoGiu(1) := false;
+	set chiamataPianoGiu(2) := false;
+	set chiamataPianoGiu(3) := false;
+	set chiamataPianoGiu(4) := false;
+
+	step
+
+	check richiesteAttive(3) = true;
+	check direzione = SU;
+	check pianoCorrente = 1;
+	check statoCabina = IN_MOVIMENTO;
+	check statoPorte = CHIUSE;
+end
+
+begin movimentoVersoPiano3
+	set pulsanteInterno(3) := false;
+
+	step
+
+	check pianoCorrente = 2;
+	check direzione = SU;
+	check statoPorte = CHIUSE;
+
+	step
+
+	check pianoCorrente = 3;
+	check direzione = SU;
+	check statoPorte = CHIUSE;
+end
+
+begin servizioPiano3
+	step
+
+	check pianoCorrente = 3;
+	check richiesteAttive(3) = false;
+	check statoCabina = FERMA;
+	check statoPorte = APERTE;
+	check direzione = NESSUNA;
+end
+
+begin chiusuraPorte
+	step
+
+	check pianoCorrente = 3;
+	check statoCabina = FERMA;
+	check statoPorte = CHIUSE;
+	check direzione = NESSUNA;
+end

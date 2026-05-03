@@ -1,0 +1,74 @@
+scenario RichiestaPianoInferiore
+load ascensore.asm
+
+begin portaAscensoreAlPiano3
+	set eventoGuasto := false;
+	set personeEntrate := 0;
+	set personeUscite := 0;
+
+	set pulsanteInterno(-1) := false;
+	set pulsanteInterno(0) := false;
+	set pulsanteInterno(1) := false;
+	set pulsanteInterno(2) := false;
+	set pulsanteInterno(3) := true;
+	set pulsanteInterno(4) := false;
+
+	set chiamataPianoSu(-1) := false;
+	set chiamataPianoSu(0) := false;
+	set chiamataPianoSu(1) := false;
+	set chiamataPianoSu(2) := false;
+	set chiamataPianoSu(3) := false;
+	set chiamataPianoSu(4) := false;
+
+	set chiamataPianoGiu(-1) := false;
+	set chiamataPianoGiu(0) := false;
+	set chiamataPianoGiu(1) := false;
+	set chiamataPianoGiu(2) := false;
+	set chiamataPianoGiu(3) := false;
+	set chiamataPianoGiu(4) := false;
+
+	step
+	set pulsanteInterno(3) := false;
+	step
+	step
+	step
+	step
+
+	check pianoCorrente = 3;
+	check statoPorte = CHIUSE;
+end
+
+begin richiestaPiano0
+	set chiamataPianoGiu(0) := true;
+
+	step
+
+	check richiesteAttive(0) = true;
+	check direzione = GIU;
+	check pianoCorrente = 2;
+	check statoCabina = IN_MOVIMENTO;
+end
+
+begin movimentoVersoPiano0
+	set chiamataPianoGiu(0) := false;
+
+	step
+
+	check pianoCorrente = 1;
+	check direzione = GIU;
+
+	step
+
+	check pianoCorrente = 0;
+	check direzione = GIU;
+end
+
+begin servizioPiano0
+	step
+
+	check pianoCorrente = 0;
+	check richiesteAttive(0) = false;
+	check statoCabina = FERMA;
+	check statoPorte = APERTE;
+	check direzione = NESSUNA;
+end
