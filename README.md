@@ -64,7 +64,8 @@ La repository è organizzata nel seguente modo:
 │   │   └── scenario_risoluzione_overload.avalla
 │
 ├── Documentazione/
-│   ├── Avalla Validation Report.md
+│   ├── Avalla and ATGT Validation Report.md
+│   ├── Avalla and ATGT Validation Report.pdf
 │   └── Requisiti e Proprieta.pdf
 │
 └── README.md
