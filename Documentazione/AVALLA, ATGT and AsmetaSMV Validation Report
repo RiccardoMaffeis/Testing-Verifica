@@ -1,11 +1,16 @@
-# Report di validazione AVALLA e ATGT del modello ASM dell'ascensore
+# Report di validazione e verifica AVALLA, ATGT e AsmetaSMV del modello ASM dell'ascensore
 
-## Validazione tramite scenari AVALLA
+## Introduzione
 
-Questo documento presenta i risultati della validazione del modello ASM relativo al sistema di ascensore.
+Questo documento presenta i risultati della validazione e verifica del modello ASM relativo al sistema di ascensore.
 
-La validazione è stata eseguita mediante scenari AVALLA, ciascuno dedicato a una specifica situazione operativa del sistema. 
-Gli scenari sono stati validati con coverage, in modo da osservare sia l'esito dei controlli sia la copertura delle regole del modello.
+L'analisi è stata eseguita mediante tre strumenti complementari:
+
+- scenari AVALLA manuali, progettati per verificare casi operativi specifici;
+- scenari generati automaticamente con ATGT, utilizzati per esplorare ulteriori configurazioni del modello;
+- model checking con AsmetaSMV, utilizzato per verificare proprietà CTL di sicurezza e raggiungibilità.
+
+Gli scenari AVALLA sono stati validati con coverage, in modo da osservare sia l'esito dei controlli sia la copertura delle regole del modello.
 
 ---
 
@@ -30,7 +35,7 @@ Ogni scenario è contenuto in un file `.avalla` separato, in modo che la simulaz
 
 ---
 
-## Esito complessivo
+## Esito complessivo degli scenari AVALLA
 
 Tutti gli scenari validati terminano senza errori.
 
@@ -69,7 +74,7 @@ Il sistema deve quindi mantenere lo stato di inattività.
 ```text
 nessuna richiesta attiva
 eventoGuasto = false
-````
+```
 
 ---
 
@@ -179,7 +184,7 @@ statoPorte = CHIUSE
 direzione = NESSUNA
 statoErrore = NESSUNO
 richiesteAttive(3) = false
-````
+```
 
 Successivamente viene generata una richiesta interna verso il piano `3`.
 
@@ -337,7 +342,7 @@ Nella prima fase viene generata una richiesta interna verso il piano `3`, così 
 
 ```text
 pulsanteInterno(3) = true
-````
+```
 
 Dopo aver raggiunto il piano `3`, viene generata una chiamata esterna verso il basso dal piano `0`.
 
@@ -496,7 +501,7 @@ Lo scenario apre inizialmente le porte al piano corrente e successivamente simul
 ```text
 personeEntrate = 9
 personeUscite = 0
-````
+```
 
 Poiché la capacità massima del modello è pari a `8`, il sistema deve entrare nello stato `OVERLOAD`.
 
@@ -610,7 +615,7 @@ Lo scenario genera inizialmente una condizione di sovraccarico simulando l'ingre
 ```text
 personeEntrate = 9
 personeUscite = 0
-````
+```
 
 Il sistema entra quindi nello stato `OVERLOAD`.
 
@@ -734,7 +739,7 @@ Lo scenario genera inizialmente una condizione di sovraccarico simulando l'ingre
 ```text
 personeEntrate = 9
 personeUscite = 0
-````
+```
 
 Successivamente, mentre il sistema si trova nello stato `OVERLOAD`, viene premuto il pulsante interno del piano `2`.
 
@@ -857,7 +862,7 @@ Lo scenario genera un evento di guasto sul sistema.
 
 ```text
 eventoGuasto = true
-````
+```
 
 Il sistema deve entrare nello stato `GUASTO` e impedire il normale movimento della cabina.
 
@@ -1081,7 +1086,7 @@ Lo scenario acquisisce inizialmente una richiesta per il piano `3`.
 
 ```text
 richiesteAttive(3) = true
-````
+```
 
 Successivamente viene generato un guasto tramite:
 
@@ -1199,7 +1204,7 @@ Lo scenario genera inizialmente un guasto tecnico.
 
 ```text
 eventoGuasto = true
-````
+```
 
 Il sistema entra nello stato `GUASTO` e inizializza il timer a `10`.
 
@@ -1387,7 +1392,7 @@ testtest2.avalla
 testtest4.avalla
 testtest6.avalla
 testtest8.avalla
-````
+```
 
 Gli scenari sono stati salvati in una cartella separata rispetto agli scenari manuali, in modo da distinguere chiaramente la validazione progettata manualmente dalla generazione automatica.
 
@@ -1397,15 +1402,15 @@ Gli scenari sono stati salvati in una cartella separata rispetto agli scenari ma
 
 Gli scenari generati da ATGT hanno permesso di osservare principalmente:
 
-* acquisizione automatica di più richieste contemporanee;
-* ingresso nello stato `GUASTO`;
-* inizializzazione del timer di ripristino;
-* decremento progressivo del timer;
-* mantenimento della cabina nello stato `BLOCCATA` durante il guasto;
-* mantenimento delle porte nello stato `CHIUSE` durante il guasto;
-* ingresso nello stato `OVERLOAD`;
-* blocco della cabina durante il sovraccarico;
-* conservazione delle richieste già acquisite.
+- acquisizione automatica di più richieste contemporanee;
+- ingresso nello stato `GUASTO`;
+- inizializzazione del timer di ripristino;
+- decremento progressivo del timer;
+- mantenimento della cabina nello stato `BLOCCATA` durante il guasto;
+- mantenimento delle porte nello stato `CHIUSE` durante il guasto;
+- ingresso nello stato `OVERLOAD`;
+- blocco della cabina durante il sovraccarico;
+- conservazione delle richieste già acquisite.
 
 In particolare, alcuni scenari generati attivano immediatamente l'evento di guasto:
 
@@ -1483,20 +1488,193 @@ Gli scenari generati automaticamente hanno confermato la coerenza generale del m
 
 In particolare, il modello mantiene correttamente gli stati di sicurezza durante condizioni anomale:
 
-* in stato `GUASTO`, la cabina resta bloccata, le porte restano chiuse e il timer viene decrementato;
-* in stato `OVERLOAD`, la cabina resta bloccata, le porte restano aperte e la direzione viene annullata;
-* le richieste già acquisite vengono mantenute nello stato del sistema.
+- in stato `GUASTO`, la cabina resta bloccata, le porte restano chiuse e il timer viene decrementato;
+- in stato `OVERLOAD`, la cabina resta bloccata, le porte restano aperte e la direzione viene annullata;
+- le richieste già acquisite vengono mantenute nello stato del sistema.
 
 ATGT è stato quindi utilizzato come supporto alla validazione manuale, aumentando la confidenza sul comportamento complessivo del modello.
 
 ---
 
+## Model checking con AsmetaSMV
+
+Oltre alla validazione mediante scenari AVALLA manuali e scenari generati automaticamente con ATGT, il modello è stato analizzato anche tramite model checking con AsmetaSMV.
+
+Il model checking è stato utilizzato per verificare proprietà CTL relative alla sicurezza del sistema e alla raggiungibilità di alcuni stati significativi.
+
+A causa dell'elevato numero di stati generato dal modello completo, è stata realizzata una versione ridotta del modello ASM, denominata `ascensore_smv_small.asm`.
+
+La versione ridotta mantiene la logica essenziale del sistema, cioè:
+
+- acquisizione delle richieste;
+- movimento della cabina;
+- apertura e chiusura delle porte;
+- gestione dello stato di guasto.
+
+Rispetto al modello completo, sono stati limitati il numero di piani e sono state rimosse alcune estensioni, come la gestione del sovraccarico e del numero di persone, 
+al fine di contenere lo spazio degli stati generato dal model checker.
+
+Questa riduzione non modifica l'obiettivo della verifica, poiché le proprietà controllate riguardano principalmente la sicurezza del movimento, 
+la corretta gestione delle porte e il comportamento del sistema in presenza di guasto.
+
+---
+
+### Modello utilizzato per AsmetaSMV
+
+Il modello utilizzato per il model checking è il seguente:
+
+```text
+ascensore_smv_small.asm
+```
+
+La versione ridotta considera tre piani:
+
+```text
+0, 1, 2
+```
+
+e uno stato di errore principale:
+
+```text
+GUASTO
+```
+
+Il timer di ripristino è stato limitato al dominio:
+
+```text
+Timer = {0, 1, 2}
+```
+
+Questa scelta permette di verificare le proprietà principali evitando l'esplosione dello spazio degli stati.
+
+---
+
+### Proprietà CTL verificate
+
+Le proprietà CTL definite nel modello sono state tradotte automaticamente da AsmetaSMV in specifiche NuSMV, denominate `ctl0`, `ctl1`, ..., `ctl13`.
+
+| Proprietà | Descrizione                                                                |
+| --------- | -------------------------------------------------------------------------- |
+| `ctl0`    | La cabina non si muove con le porte aperte                                 |
+| `ctl1`    | La cabina si muove solo in assenza di guasto                               |
+| `ctl2`    | In caso di guasto la cabina è bloccata                                     |
+| `ctl3`    | In caso di guasto le porte sono chiuse                                     |
+| `ctl4`    | In caso di guasto la direzione è annullata                                 |
+| `ctl5`    | Se le porte sono aperte e non c'è guasto, la cabina è ferma                |
+| `ctl6`    | Se la cabina è bloccata, il sistema è in guasto                            |
+| `ctl7`    | Se il timer è maggiore di zero, il sistema è in guasto                     |
+| `ctl8`    | Se il guasto ha timer zero, al passo successivo il sistema torna operativo |
+| `ctl9`    | Da ogni stato è possibile raggiungere uno stato senza guasto               |
+| `ctl10`   | Da ogni stato è possibile raggiungere uno stato con cabina ferma           |
+| `ctl11`   | È raggiungibile un movimento verso l'alto                                  |
+| `ctl12`   | È raggiungibile un movimento verso il basso                                |
+| `ctl13`   | È raggiungibile lo stato di guasto                                         |
+
+---
+
+### Proprietà di sicurezza
+
+Le proprietà principali di sicurezza verificate sono:
+
+```text
+AG(statoCabina = IN_MOVIMENTO -> statoPorte = CHIUSE)
+```
+
+Questa proprietà verifica che la cabina non possa mai muoversi con le porte aperte.
+
+```text
+AG(statoCabina = IN_MOVIMENTO -> statoErrore = NESSUNO)
+```
+
+Questa proprietà verifica che la cabina possa muoversi solo quando il sistema non si trova in stato di guasto.
+
+```text
+AG(statoErrore = GUASTO -> statoCabina = BLOCCATA)
+```
+
+Questa proprietà verifica che, in caso di guasto, la cabina venga bloccata.
+
+```text
+AG(statoErrore = GUASTO -> statoPorte = CHIUSE)
+```
+
+Questa proprietà verifica che, in caso di guasto, le porte rimangano chiuse.
+
+```text
+AG(statoErrore = GUASTO -> direzione = NESSUNA)
+```
+
+Questa proprietà verifica che, in caso di guasto, la direzione venga annullata.
+
+---
+
+### Proprietà di raggiungibilità
+
+Oltre alle proprietà di sicurezza, sono state verificate anche proprietà di raggiungibilità.
+
+In particolare, il model checking conferma che:
+
+- da ogni stato è possibile raggiungere uno stato senza guasto;
+- da ogni stato è possibile raggiungere uno stato con cabina ferma;
+- è raggiungibile un movimento verso l'alto;
+- è raggiungibile un movimento verso il basso;
+- è raggiungibile lo stato di guasto.
+
+Queste proprietà permettono di verificare che il modello non rimanga bloccato in stati anomali non recuperabili e che i principali comportamenti del sistema siano effettivamente esplorabili.
+
+---
+
+### File SMV generato
+
+AsmetaSMV genera automaticamente un file NuSMV a partire dal modello ASM ridotto.
+
+Il file generato è:
+
+```text
+ascensore_smv_small.smv
+```
+
+Nel file SMV vengono introdotti valori ausiliari di tipo `UNDEF`, utilizzati dal traduttore per rappresentare configurazioni non definite dei domini ASM.
+
+Ad esempio, per i domini enumerativi vengono aggiunti valori come:
+
+```text
+DIREZIONE_UNDEF
+STATOCABINA_UNDEF
+STATOERRORE_UNDEF
+STATOPORTE_UNDEF
+```
+
+Per i domini numerici può inoltre comparire un valore speciale, come:
+
+```text
+-2147483647
+```
+
+Questo valore non rappresenta un piano reale del sistema, ma viene usato internamente dal traduttore come valore ausiliario.
+
+---
+
+### Esito del model checking
+
+L'esecuzione del model checking sul modello ridotto termina correttamente.
+
+Le proprietà CTL definite risultano verificate e confermano la correttezza del comportamento del modello rispetto agli aspetti di sicurezza considerati.
+
+In particolare, il sistema impedisce il movimento della cabina con porte aperte, impedisce il movimento durante un guasto e garantisce che, in caso di guasto, la cabina venga bloccata, le porte vengano chiuse e la direzione venga annullata.
+
+Il model checking conferma inoltre che gli stati principali del sistema sono raggiungibili e che il guasto non rappresenta uno stato permanente non recuperabile.
+
+---
+
 ## Conclusione
 
-La validazione tramite scenari AVALLA manuali e tramite scenari generati automaticamente con ATGT conferma il comportamento corretto del modello rispetto alle principali situazioni operative considerate.
+La validazione tramite scenari AVALLA manuali, scenari generati automaticamente con ATGT e model checking con AsmetaSMV conferma la coerenza del modello rispetto alle principali situazioni operative considerate e alle proprietà di sicurezza definite.
 
-Gli scenari manuali permettono di verificare in modo mirato il funzionamento ordinario dell'ascensore e la gestione delle condizioni anomale, distinguendo correttamente tra sovraccarico e guasto.
+Gli scenari AVALLA manuali permettono di verificare in modo mirato il funzionamento ordinario dell'ascensore e la gestione delle condizioni anomale, distinguendo correttamente tra sovraccarico e guasto.
 
 Gli scenari generati con ATGT permettono invece di esplorare automaticamente ulteriori configurazioni del modello, aumentando la copertura e la confidenza nella correttezza del comportamento complessivo.
 
-Il modello risulta quindi coerente con i requisiti funzionali e con le principali proprietà di sicurezza definite nella documentazione di progetto.
+Il model checking con AsmetaSMV permette infine di verificare formalmente proprietà CTL relative alla sicurezza del movimento, alla gestione delle porte, allo stato di guasto e alla raggiungibilità degli stati principali.
+
+Nel complesso, il modello risulta coerente con i requisiti funzionali e con le principali proprietà di sicurezza definite nella documentazione di progetto.
