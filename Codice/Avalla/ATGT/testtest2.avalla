@@ -1,0 +1,90 @@
+scenario testtest2
+
+load ./..\ascensore.asm
+
+//// test name test@test2
+//// generated for (test goal): test2: NULL
+set chiamataPianoSu(0) := true;
+set chiamataPianoSu(4) := true;
+set chiamataPianoGiu(1) := true;
+set chiamataPianoSu(3) := true;
+set pulsanteInterno(-1) := false;
+set chiamataPianoGiu(0) := true;
+set chiamataPianoSu(2) := true;
+set chiamataPianoSu(1) := false;
+set chiamataPianoGiu(4) := true;
+set chiamataPianoGiu(3) := true;
+set chiamataPianoGiu(2) := true;
+set pulsanteInterno(0) := true;
+set pulsanteInterno(1) := false;
+set pulsanteInterno(2) := false;
+set pulsanteInterno(3) := false;
+set pulsanteInterno(4) := true;
+set eventoGuasto := true;
+set chiamataPianoSu(-1) := false;
+set chiamataPianoGiu(-1) := true;
+step
+check timer = 10;
+check statoPorte = CHIUSE;
+check statoCabina = BLOCCATA;
+check direzione = NESSUNA;
+check richiesteAttive(1) = true;
+check statoErrore = GUASTO;
+check richiesteAttive(2) = true;
+check richiesteAttive(0) = true;
+check richiesteAttive(3) = true;
+check richiesteAttive(4) = true;
+step
+check timer = 9;
+check statoPorte = CHIUSE;
+check statoCabina = BLOCCATA;
+check statoErrore = GUASTO;
+check direzione = NESSUNA;
+step
+check statoErrore = GUASTO;
+check statoCabina = BLOCCATA;
+check timer = 8;
+check statoPorte = CHIUSE;
+check direzione = NESSUNA;
+step
+check timer = 7;
+check statoPorte = CHIUSE;
+check direzione = NESSUNA;
+check statoErrore = GUASTO;
+check statoCabina = BLOCCATA;
+step
+check timer = 6;
+check statoErrore = GUASTO;
+check statoPorte = CHIUSE;
+check direzione = NESSUNA;
+check statoCabina = BLOCCATA;
+step
+check statoErrore = GUASTO;
+check direzione = NESSUNA;
+check timer = 5;
+check statoPorte = CHIUSE;
+check statoCabina = BLOCCATA;
+step
+check direzione = NESSUNA;
+check statoPorte = CHIUSE;
+check statoErrore = GUASTO;
+check timer = 4;
+check statoCabina = BLOCCATA;
+step
+check direzione = NESSUNA;
+check statoCabina = BLOCCATA;
+check statoPorte = CHIUSE;
+check timer = 3;
+check statoErrore = GUASTO;
+step
+check statoPorte = CHIUSE;
+check direzione = NESSUNA;
+check timer = 2;
+check statoCabina = BLOCCATA;
+check statoErrore = GUASTO;
+step
+check statoPorte = CHIUSE;
+check direzione = NESSUNA;
+check statoCabina = BLOCCATA;
+check statoErrore = GUASTO;
+check timer = 1;

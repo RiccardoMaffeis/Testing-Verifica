@@ -1,0 +1,156 @@
+scenario testtest6
+
+load ./..\ascensore.asm
+
+//// test name test@test6
+//// generated for (test goal): test6: NULL
+set chiamataPianoSu(0) := true;
+set chiamataPianoSu(4) := false;
+set chiamataPianoGiu(1) := false;
+set chiamataPianoSu(3) := false;
+set pulsanteInterno(-1) := true;
+set chiamataPianoGiu(0) := true;
+set eventoGuasto := false;
+set chiamataPianoSu(2) := false;
+set chiamataPianoSu(1) := false;
+set chiamataPianoGiu(4) := true;
+set personeEntrate := 666155076;
+set chiamataPianoGiu(3) := true;
+set chiamataPianoGiu(2) := false;
+set personeUscite := 1703289982;
+set pulsanteInterno(0) := false;
+set pulsanteInterno(1) := false;
+set pulsanteInterno(2) := false;
+set pulsanteInterno(3) := false;
+set pulsanteInterno(4) := true;
+set chiamataPianoSu(-1) := false;
+set chiamataPianoGiu(-1) := true;
+step
+check direzione = NESSUNA;
+check richiesteAttive(0) = false;
+check richiesteAttive(3) = true;
+check statoPorte = APERTE;
+check richiesteAttive(4) = true;
+check statoCabina = FERMA;
+check richiesteAttive(-1) = true;
+set chiamataPianoSu(0) := false;
+set personeEntrate := -1551358459;
+set chiamataPianoGiu(1) := true;
+set chiamataPianoSu(4) := true;
+set chiamataPianoGiu(0) := false;
+set chiamataPianoSu(3) := true;
+set chiamataPianoSu(2) := true;
+set chiamataPianoGiu(3) := false;
+set pulsanteInterno(0) := true;
+set pulsanteInterno(1) := true;
+set personeUscite := -2043240713;
+set pulsanteInterno(3) := true;
+set pulsanteInterno(4) := false;
+set chiamataPianoSu(-1) := true;
+set chiamataPianoGiu(-1) := false;
+step
+check richiesteAttive(1) = true;
+check richiesteAttive(2) = true;
+check richiesteAttive(0) = true;
+check statoErrore = OVERLOAD;
+check direzione = NESSUNA;
+check statoPorte = APERTE;
+check numeroPersone = 491882254;
+check statoCabina = BLOCCATA;
+set personeEntrate := -1533961181;
+set chiamataPianoGiu(1) := false;
+set chiamataPianoGiu(4) := false;
+set chiamataPianoGiu(3) := true;
+set pulsanteInterno(1) := false;
+set pulsanteInterno(2) := true;
+set pulsanteInterno(3) := false;
+set pulsanteInterno(4) := true;
+set chiamataPianoSu(-1) := false;
+set personeUscite := -1284875618;
+step
+check statoPorte = APERTE;
+check numeroPersone = 242796691;
+check statoCabina = BLOCCATA;
+check statoErrore = OVERLOAD;
+check direzione = NESSUNA;
+set chiamataPianoSu(0) := true;
+set personeUscite := -180836182;
+set chiamataPianoGiu(0) := true;
+set chiamataPianoSu(2) := false;
+set chiamataPianoSu(1) := true;
+set personeEntrate := -180128317;
+set chiamataPianoGiu(3) := false;
+set pulsanteInterno(1) := true;
+set pulsanteInterno(3) := true;
+set chiamataPianoGiu(-1) := true;
+step
+check direzione = NESSUNA;
+check statoCabina = BLOCCATA;
+check statoPorte = APERTE;
+check statoErrore = OVERLOAD;
+check numeroPersone = 243504556;
+set personeUscite := 1949366753;
+set chiamataPianoSu(4) := false;
+set chiamataPianoGiu(0) := false;
+set chiamataPianoSu(3) := false;
+set chiamataPianoGiu(4) := true;
+set chiamataPianoGiu(2) := true;
+set pulsanteInterno(0) := false;
+set pulsanteInterno(1) := false;
+set pulsanteInterno(2) := false;
+set pulsanteInterno(3) := false;
+set chiamataPianoSu(-1) := true;
+set personeEntrate := 424097555;
+step
+check statoCabina = FERMA;
+check direzione = NESSUNA;
+check richiesteAttive(0) = false;
+check numeroPersone = 0;
+check statoErrore = NESSUNO;
+check statoPorte = APERTE;
+set chiamataPianoSu(0) := false;
+set chiamataPianoGiu(1) := true;
+set chiamataPianoSu(4) := true;
+set chiamataPianoSu(3) := true;
+set chiamataPianoSu(1) := false;
+set chiamataPianoGiu(2) := false;
+set personeEntrate := -1196318193;
+set eventoGuasto := true;
+set pulsanteInterno(1) := true;
+set pulsanteInterno(2) := true;
+set personeUscite := 1236688215;
+step
+check statoPorte = CHIUSE;
+check statoErrore = GUASTO;
+check direzione = NESSUNA;
+check timer = 10;
+check statoCabina = BLOCCATA;
+check numeroPersone = 0;
+step
+check statoPorte = CHIUSE;
+check statoCabina = BLOCCATA;
+check direzione = NESSUNA;
+check timer = 9;
+check statoErrore = GUASTO;
+check numeroPersone = 0;
+step
+check timer = 8;
+check statoPorte = CHIUSE;
+check direzione = NESSUNA;
+check numeroPersone = 0;
+check statoCabina = BLOCCATA;
+check statoErrore = GUASTO;
+step
+check direzione = NESSUNA;
+check numeroPersone = 0;
+check statoErrore = GUASTO;
+check statoPorte = CHIUSE;
+check timer = 7;
+check statoCabina = BLOCCATA;
+step
+check statoPorte = CHIUSE;
+check statoCabina = BLOCCATA;
+check statoErrore = GUASTO;
+check direzione = NESSUNA;
+check timer = 6;
+check numeroPersone = 0;
