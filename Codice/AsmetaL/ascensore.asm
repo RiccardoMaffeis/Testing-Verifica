@@ -144,7 +144,6 @@ definitions:
 	        direzione := NESSUNA
 	    endpar
 
-
 	// Determina la direzione in base alle richieste attive
 	rule r_scegliDirezione =
 	    if (exist $p0 in Piano with richiesteAttive($p0)) then
@@ -181,7 +180,6 @@ definitions:
 	        direzione := NESSUNA
 	    endif
 
-
 	// Muove la cabina di un piano nella direzione scelta
 	rule r_muoviAscensore =
 	    if statoErrore = NESSUNO and statoPorte = CHIUSE then
@@ -207,8 +205,7 @@ definitions:
 	
 	    endif
 
-
-	 // Coordina il comportamento normale dell'ascensore
+	// Coordina il comportamento normale dell'ascensore
 	rule r_gestisciAscensore =
 	    if statoErrore = NESSUNO then
 	
