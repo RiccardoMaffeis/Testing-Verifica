@@ -51,17 +51,23 @@ La repository è organizzata nel seguente modo:
 ├── Codice/
 │   ├── AsmetaL/
 │   │   └── ascensore.asm
-│   ├── Avalla/
-│   │   ├── scenario_blocco_richieste_durante_guasto.avalla
-│   │   ├── scenario_conservazione_richieste_guasto.avalla
-│   │   ├── scenario_guasto.avalla
-│   │   ├── scenario_idle.avalla
-│   │   ├── scenario_overload.avalla
-│   │   ├── scenario_richiesta_piano_inferiore.avalla
-│   │   ├── scenario_richiesta_piano_superiore.avalla
-│   │   ├── scenario_richieste_durante_overload.avalla
-│   │   ├── scenario_ripristino_guasto.avalla
-│   │   └── scenario_risoluzione_overload.avalla
+│   └── Avalla/
+│       ├── ATGT/
+│       │   ├── testtest0.avalla
+│       │   ├── testtest2.avalla
+│       │   ├── testtest4.avalla
+│       │   ├── testtest6.avalla
+│       │   └── testtest8.avalla
+│       ├── scenario_blocco_richieste_durante_guasto.avalla
+│       ├── scenario_conservazione_richieste_guasto.avalla
+│       ├── scenario_guasto.avalla
+│       ├── scenario_idle.avalla
+│       ├── scenario_overload.avalla
+│       ├── scenario_richiesta_piano_inferiore.avalla
+│       ├── scenario_richiesta_piano_superiore.avalla
+│       ├── scenario_richieste_durante_overload.avalla
+│       ├── scenario_ripristino_guasto.avalla
+│       └── scenario_risoluzione_overload.avalla
 │
 ├── Documentazione/
 │   ├── Avalla and ATGT Validation Report.md
@@ -69,7 +75,7 @@ La repository è organizzata nel seguente modo:
 │   └── Requisiti e Proprieta.pdf
 │
 └── README.md
-````
+```
 
 ---
 
@@ -95,24 +101,39 @@ Al suo interno sono definiti:
 
 ---
 
-## Scenari AVALLA
+## Scenari AVALLA e ATGT
 
 Gli scenari `.avalla` servono per validare il comportamento del modello ASM.
 
-Ogni scenario testa una situazione specifica:
+Nel progetto sono presenti due gruppi di scenari:
 
-* funzionamento in assenza di richieste;
-* richiesta verso un piano superiore;
-* richiesta verso un piano inferiore;
-* ingresso nello stato di sovraccarico;
-* risoluzione del sovraccarico;
-* acquisizione di richieste durante il sovraccarico;
-* ingresso nello stato di guasto;
-* blocco delle nuove richieste durante il guasto;
-* conservazione delle richieste già acquisite durante il guasto;
-* ripristino dopo guasto.
+- scenari AVALLA manuali;
+- scenari AVALLA generati automaticamente tramite ATGT.
 
-Gli scenari sono stati mantenuti separati, così ogni validazione parte dallo stato iniziale definito nel modello ASM.
+Gli scenari manuali sono stati scritti per verificare situazioni specifiche e significative del sistema, come il movimento della cabina, il servizio di un piano richiesto, il sovraccarico e il guasto.
+
+Gli scenari generati con ATGT sono stati invece utilizzati come supporto alla validazione manuale, per esplorare automaticamente ulteriori configurazioni raggiungibili del modello.
+
+Gli scenari manuali testano:
+
+- funzionamento in assenza di richieste;
+- richiesta verso un piano superiore;
+- richiesta verso un piano inferiore;
+- ingresso nello stato di sovraccarico;
+- risoluzione del sovraccarico;
+- acquisizione di richieste durante il sovraccarico;
+- ingresso nello stato di guasto;
+- blocco delle nuove richieste durante il guasto;
+- conservazione delle richieste già acquisite durante il guasto;
+- ripristino dopo guasto.
+
+Gli scenari generati con ATGT sono contenuti nella cartella:
+
+```text
+Codice/Avalla/ATGT/
+```
+
+Gli scenari sono stati mantenuti separati, così ogni validazione parte dallo stato iniziale definito nel modello ASM e risulta chiara la distinzione tra test manuali e test generati automaticamente.
 
 ---
 
@@ -140,10 +161,16 @@ Ogni scenario carica il modello tramite:
 load ascensore.asm
 ```
 
-Il risultato completo della validazione è documentato nel file:
+La validazione è stata svolta in due modi:
+
+- mediante scenari AVALLA manuali, progettati per verificare i principali requisiti funzionali;
+- mediante scenari generati automaticamente con ATGT, usati per esplorare ulteriori configurazioni del modello.
+
+Il risultato completo della validazione è documentato nei file:
 
 ```text
-Documentazione/validation_report.md
+Documentazione/Avalla and ATGT Validation Report.md
+Documentazione/Avalla and ATGT Validation Report.pdf
 ```
 
 Il report contiene:
@@ -154,7 +181,36 @@ Il report contiene:
 * risultato dei controlli;
 * coverage delle regole;
 * regole non coperte da ogni singolo scenario;
+* scenari generati automaticamente con ATGT;
+* osservazioni sui valori generati automaticamente;
 * conclusione complessiva della validazione.
+
+---
+
+## Generazione automatica con ATGT
+
+Oltre agli scenari AVALLA manuali, è stato utilizzato ATGT per generare automaticamente ulteriori scenari di test.
+
+Gli scenari generati sono contenuti nella cartella:
+
+```text
+Codice/Avalla/ATGT/
+```
+
+Questi scenari sono stati usati come supporto alla validazione manuale, per esplorare configurazioni aggiuntive del modello e osservare il comportamento del sistema in condizioni generate automaticamente.
+
+Gli scenari ATGT hanno permesso di osservare principalmente:
+
+* acquisizione automatica di più richieste contemporanee;
+* ingresso nello stato `GUASTO`;
+* decremento progressivo del timer di ripristino;
+* ingresso nello stato `OVERLOAD`;
+* blocco della cabina durante condizioni anomale;
+* conservazione delle richieste già acquisite.
+
+Alcuni valori generati automaticamente per le variabili personeEntrate e personeUscite risultano molto elevati o negativi, perché tali variabili sono modellate come Integer.
+
+Questi casi non rappresentano situazioni realistiche dal punto di vista applicativo, ma sono utili per verificare la robustezza logica del modello rispetto a configurazioni estreme.
 
 ---
 
