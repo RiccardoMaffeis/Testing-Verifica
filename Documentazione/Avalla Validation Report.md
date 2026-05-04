@@ -1,4 +1,4 @@
-# Report di validazione AVALLA del modello ASM dell'ascensore
+# Report di validazione AVALLA e ATGT del modello ASM dell'ascensore
 
 ## Validazione tramite scenari AVALLA
 
@@ -1365,11 +1365,138 @@ Durante lo stato `GUASTO`, il timer viene decrementato progressivamente da `10` 
 
 ---
 
+## Generazione automatica di scenari con ATGT
+
+Oltre agli scenari AVALLA definiti manualmente, il modello è stato analizzato anche tramite ATGT, utilizzato per generare automaticamente scenari di test.
+
+L'obiettivo dell'utilizzo di ATGT è stato quello di affiancare alla validazione manuale una forma di esplorazione automatica del modello, generando sequenze di input e controlli sullo stato del sistema.
+
+Gli scenari manuali AVALLA sono stati progettati per verificare casi specifici e significativi, come il movimento della cabina, la gestione del sovraccarico e la gestione del guasto.
+
+Gli scenari generati tramite ATGT, invece, sono stati utilizzati per esplorare ulteriori configurazioni raggiungibili del modello.
+
+---
+
+### Scenari generati
+
+ATGT ha generato i seguenti scenari AVALLA:
+
+```text
+testtest0.avalla
+testtest2.avalla
+testtest4.avalla
+testtest6.avalla
+testtest8.avalla
+````
+
+Gli scenari sono stati salvati in una cartella separata rispetto agli scenari manuali, in modo da distinguere chiaramente la validazione progettata manualmente dalla generazione automatica.
+
+---
+
+### Comportamenti osservati
+
+Gli scenari generati da ATGT hanno permesso di osservare principalmente:
+
+* acquisizione automatica di più richieste contemporanee;
+* ingresso nello stato `GUASTO`;
+* inizializzazione del timer di ripristino;
+* decremento progressivo del timer;
+* mantenimento della cabina nello stato `BLOCCATA` durante il guasto;
+* mantenimento delle porte nello stato `CHIUSE` durante il guasto;
+* ingresso nello stato `OVERLOAD`;
+* blocco della cabina durante il sovraccarico;
+* conservazione delle richieste già acquisite.
+
+In particolare, alcuni scenari generati attivano immediatamente l'evento di guasto:
+
+```text
+eventoGuasto = true
+```
+
+e verificano che il sistema assuma correttamente lo stato:
+
+```text
+statoErrore = GUASTO
+statoCabina = BLOCCATA
+statoPorte = CHIUSE
+direzione = NESSUNA
+timer = 10
+```
+
+Nei passi successivi viene inoltre verificato il decremento del timer:
+
+```text
+timer = 9
+timer = 8
+timer = 7
+...
+timer = 1
+```
+
+Altri scenari generati esplorano invece condizioni di sovraccarico, verificando che il sistema entri nello stato:
+
+```text
+statoErrore = OVERLOAD
+statoCabina = BLOCCATA
+statoPorte = APERTE
+direzione = NESSUNA
+```
+
+---
+
+### Differenza rispetto agli scenari manuali
+
+Gli scenari AVALLA manuali sono stati utilizzati per verificare requisiti funzionali precisi e facilmente interpretabili.
+
+Gli scenari generati da ATGT hanno invece un ruolo complementare: permettono di esplorare automaticamente il comportamento del modello su sequenze di input più ampie e meno guidate.
+
+| Tipo di scenario          | Scopo                                                |
+| ------------------------- | ---------------------------------------------------- |
+| Scenari AVALLA manuali    | Verifica mirata dei requisiti principali             |
+| Scenari generati con ATGT | Esplorazione automatica di ulteriori configurazioni  |
+| Coverage                  | Valutazione della copertura delle regole del modello |
+
+---
+
+### Osservazioni sui valori generati
+
+Alcuni scenari generati da ATGT contengono valori molto elevati o negativi per le variabili `personeEntrate` e `personeUscite`.
+
+Esempi:
+
+```text
+personeEntrate := -468688956
+personeUscite := -1007009643
+```
+
+Questi valori non rappresentano casi realistici dal punto di vista applicativo, ma derivano dal fatto che tali variabili sono modellate come `Integer` e quindi ATGT può generare valori interi arbitrari.
+
+Nonostante ciò, gli scenari risultano utili per verificare la robustezza logica del modello rispetto a configurazioni estreme.
+
+Questa osservazione evidenzia una possibile estensione futura del modello: limitare il dominio di `personeEntrate` e `personeUscite` a valori più realistici, ad esempio mediante domini finiti o vincoli sugli input.
+
+---
+
+### Risultato complessivo
+
+Gli scenari generati automaticamente hanno confermato la coerenza generale del modello rispetto ai comportamenti esplorati.
+
+In particolare, il modello mantiene correttamente gli stati di sicurezza durante condizioni anomale:
+
+* in stato `GUASTO`, la cabina resta bloccata, le porte restano chiuse e il timer viene decrementato;
+* in stato `OVERLOAD`, la cabina resta bloccata, le porte restano aperte e la direzione viene annullata;
+* le richieste già acquisite vengono mantenute nello stato del sistema.
+
+ATGT è stato quindi utilizzato come supporto alla validazione manuale, aumentando la confidenza sul comportamento complessivo del modello.
+
+---
+
 ## Conclusione
 
-La validazione tramite scenari AVALLA conferma il comportamento corretto del modello rispetto alle principali situazioni operative considerate.
+La validazione tramite scenari AVALLA manuali e tramite scenari generati automaticamente con ATGT conferma il comportamento corretto del modello rispetto alle principali situazioni operative considerate.
 
-Gli scenari permettono di verificare sia il funzionamento ordinario dell'ascensore sia la gestione delle condizioni anomale, 
-distinguendo correttamente tra sovraccarico e guasto.
+Gli scenari manuali permettono di verificare in modo mirato il funzionamento ordinario dell'ascensore e la gestione delle condizioni anomale, distinguendo correttamente tra sovraccarico e guasto.
+
+Gli scenari generati con ATGT permettono invece di esplorare automaticamente ulteriori configurazioni del modello, aumentando la copertura e la confidenza nella correttezza del comportamento complessivo.
 
 Il modello risulta quindi coerente con i requisiti funzionali e con le principali proprietà di sicurezza definite nella documentazione di progetto.
