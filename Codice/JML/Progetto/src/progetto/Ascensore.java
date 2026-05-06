@@ -22,12 +22,6 @@ public class Ascensore {
     private /*@ spec_public @*/ final boolean[] richiesteAttive;
 
     /*@
-      @ public invariant PIANO_MINIMO == -1;
-      @ public invariant PIANO_MASSIMO == 4;
-      @ public invariant NUMERO_PIANI == 6;
-      @ public invariant CAPACITA_MASSIMA == 8;
-      @ public invariant TIMER_MASSIMO == 10;
-      @
       @ public invariant PIANO_MINIMO <= pianoCorrente && pianoCorrente <= PIANO_MASSIMO;
       @ public invariant 0 <= timer && timer <= TIMER_MASSIMO;
       @ public invariant numeroPersone >= 0;
