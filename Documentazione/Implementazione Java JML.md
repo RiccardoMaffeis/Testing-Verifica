@@ -133,25 +133,6 @@ Nel codice Java sono rappresentate tramite un array:
 private final boolean[] richiesteAttive;
 ```
 
-Poiché in Java gli array partono da indice `0`, mentre i piani dell’ascensore vanno da `-1` a `4`, viene utilizzato il metodo:
-
-```java
-indiceDelPiano(int piano)
-```
-
-Il metodo converte il numero del piano nell’indice dell’array.
-
-La conversione è:
-
-```text
-piano -1 -> indice 0
-piano  0 -> indice 1
-piano  1 -> indice 2
-piano  2 -> indice 3
-piano  3 -> indice 4
-piano  4 -> indice 5
-```
-
 Il contratto JML del metodo è:
 
 ```java
