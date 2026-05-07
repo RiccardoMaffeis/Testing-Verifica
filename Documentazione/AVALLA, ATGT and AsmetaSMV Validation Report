@@ -1,86 +1,68 @@
 # Report di validazione e verifica AVALLA, ATGT e AsmetaSMV del modello ASM dell'ascensore
 
-## Introduzione
+## 1. Introduzione
 
-Questo documento presenta i risultati della validazione e verifica del modello ASM relativo al sistema di ascensore.
+Questo documento presenta i risultati della validazione e della verifica del modello ASM relativo a un sistema di ascensore a più piani con un'unica cabina.
 
-L'analisi è stata eseguita mediante tre strumenti complementari:
+L'analisi è stata svolta mediante tre strumenti complementari dell'ambiente ASMETA:
 
-- scenari AVALLA manuali, progettati per verificare casi operativi specifici;
+- scenari AVALLA manuali, utilizzati per verificare casi operativi specifici;
 - scenari generati automaticamente con ATGT, utilizzati per esplorare ulteriori configurazioni del modello;
 - model checking con AsmetaSMV, utilizzato per verificare proprietà CTL di sicurezza e raggiungibilità.
 
-Gli scenari AVALLA sono stati validati con coverage, in modo da osservare sia l'esito dei controlli sia la copertura delle regole del modello.
+Gli scenari AVALLA sono stati eseguiti anche con analisi di coverage, così da osservare la copertura delle regole del modello durante la validazione.
 
 ---
 
-## Scenari considerati
+## 2. Obiettivo della validazione
 
-La validazione è stata suddivisa in più scenari, così da verificare separatamente le principali funzionalità del modello.
+L'obiettivo della validazione è verificare che il modello ASM dell'ascensore rispetti i principali requisiti funzionali e di sicurezza definiti per il sistema.
 
-Gli scenari considerati sono:
+In particolare, la validazione controlla che:
 
-- funzionamento in assenza di richieste;
-- richiesta verso un piano superiore;
-- richiesta verso un piano inferiore;
-- gestione del sovraccarico;
-- risoluzione del sovraccarico;
-- acquisizione di richieste durante il sovraccarico;
-- ingresso nello stato di guasto;
-- blocco delle nuove richieste durante il guasto;
-- conservazione delle richieste già acquisite durante il guasto;
-- ripristino dopo guasto.
-
-Ogni scenario è contenuto in un file `.avalla` separato, in modo che la simulazione parta sempre dallo stato iniziale definito nel modello ASM.
+- le richieste vengano acquisite correttamente;
+- la cabina si muova nella direzione corretta;
+- il movimento avvenga solo con porte chiuse;
+- il piano richiesto venga servito correttamente;
+- le richieste servite vengano rimosse;
+- il sistema gestisca correttamente il sovraccarico;
+- il sistema gestisca correttamente il guasto tecnico;
+- durante il guasto non vengano acquisite nuove richieste;
+- le richieste già acquisite vengano conservate durante condizioni anomale;
+- il sistema possa tornare operativo dopo il ripristino del guasto.
 
 ---
 
-## Esito complessivo degli scenari AVALLA
+## 3. Scenari AVALLA manuali
 
-Tutti gli scenari validati terminano senza errori.
+La validazione manuale è stata suddivisa in dieci scenari AVALLA, ciascuno dedicato a una specifica funzionalità del modello.
 
-Nel complesso, la validazione conferma che il modello rispetta i principali requisiti attesi:
+Ogni scenario è contenuto in un file `.avalla` separato, in modo che ogni simulazione parta dallo stato iniziale definito nel modello ASM.
 
-- la cabina non si muove con porte aperte;
-- le richieste vengono acquisite e mantenute finché non sono servite;
-- il movimento avviene in modo coerente con la direzione scelta;
-- lo stato di `OVERLOAD` blocca la cabina e mantiene le porte aperte;
-- lo stato di `GUASTO` blocca la cabina e sospende l'acquisizione di nuove richieste;
-- le richieste già acquisite non vengono eliminate durante le anomalie;
-- il sistema può tornare operativo dopo il timeout di ripristino.
+| N. | Scenario | File AVALLA | Obiettivo |
+|---:|----------|-------------|-----------|
+| 1 | Idle ascensore | `scenario_idle.avalla` | Verificare il comportamento in assenza di richieste |
+| 2 | Richiesta verso piano superiore | `scenario_richiesta_piano_superiore.avalla` | Verificare acquisizione, movimento verso l'alto e servizio del piano |
+| 3 | Richiesta verso piano inferiore | `scenario_richiesta_piano_inferiore.avalla` | Verificare acquisizione, movimento verso il basso e servizio del piano |
+| 4 | Overload | `scenario_overload.avalla` | Verificare l'ingresso nello stato di sovraccarico |
+| 5 | Risoluzione overload | `scenario_risoluzione_overload.avalla` | Verificare l'uscita dallo stato di sovraccarico |
+| 6 | Richieste durante overload | `scenario_richieste_durante_overload.avalla` | Verificare che durante il sovraccarico le richieste vengano ancora acquisite |
+| 7 | Guasto tecnico | `scenario_guasto.avalla` | Verificare l'ingresso nello stato di guasto |
+| 8 | Blocco richieste durante guasto | `scenario_blocco_richieste_durante_guasto.avalla` | Verificare che durante il guasto non vengano acquisite nuove richieste |
+| 9 | Conservazione richieste durante guasto | `scenario_conservazione_richieste_guasto.avalla` | Verificare che le richieste già acquisite non vengano cancellate |
+| 10 | Ripristino dopo guasto | `scenario_ripristino_guasto.avalla` | Verificare il decremento del timer e il ritorno allo stato operativo |
 
----
-
-## Dettaglio degli scenari validati
-
-### 1. Idle ascensore
-
-**File AVALLA:** `scenario_idle.avalla`
-
-#### Obiettivo
-
-Verificare che, in assenza di richieste e di condizioni di errore, l'ascensore rimanga fermo nello stato di attesa.
-
-Lo scenario controlla che la cabina non cambi piano, che le porte restino chiuse e che la direzione rimanga `NESSUNA`.
+Tutti gli scenari AVALLA manuali sono terminati senza errori.
 
 ---
 
-#### Simulazione eseguita
+## 4. Risultati degli scenari AVALLA manuali
 
-Lo scenario non genera nuove richieste e non attiva eventi di guasto.
+### 4.1 Scenario idle
 
-Il sistema deve quindi mantenere lo stato di inattività.
+Lo scenario `scenario_idle.avalla` verifica che, in assenza di richieste e di condizioni di errore, l'ascensore rimanga fermo nello stato iniziale.
 
-```text
-nessuna richiesta attiva
-eventoGuasto = false
-```
-
----
-
-#### Stati osservati dalla simulazione
-
-Dopo il passo logico eseguito, lo stato significativo osservato è:
+Lo stato osservato conferma che:
 
 ```text
 pianoCorrente = 0
@@ -90,435 +72,47 @@ direzione = NESSUNA
 statoErrore = NESSUNO
 ```
 
-La console mostra inoltre che viene eseguita la regola di idle:
-
-```text
-statoCabina = FERMA
-direzione = NESSUNA
-```
+Il risultato conferma che il modello mantiene correttamente l'ascensore nello stato di attesa quando non sono presenti richieste attive.
 
 ---
 
-#### Check eseguiti
+### 4.2 Richiesta verso piano superiore
 
-| Check                   | Esito  |
-| ----------------------- | ------ |
-| `pianoCorrente = 0`     | Passed |
-| `statoCabina = FERMA`   | Passed |
-| `statoPorte = CHIUSE`   | Passed |
-| `direzione = NESSUNA`   | Passed |
-| `statoErrore = NESSUNO` | Passed |
+Lo scenario `scenario_richiesta_piano_superiore.avalla` verifica il servizio di una richiesta interna verso il piano `3`.
+
+Il modello acquisisce correttamente la richiesta, imposta la direzione a `SU` e muove progressivamente la cabina dal piano `0` al piano `3`.
+
+Al raggiungimento del piano richiesto, il sistema:
+
+```text
+apre le porte
+ferma la cabina
+rimuove la richiesta attiva
+annulla la direzione
+```
+
+Il risultato conferma il corretto comportamento del modello nel caso di richiesta verso un piano superiore.
 
 ---
 
-#### Coverage dello scenario
+### 4.3 Richiesta verso piano inferiore
 
-| Regola                  | Branch coverage | Rule coverage | Update rule coverage | Forall rule coverage |
-| ----------------------- | --------------: | ------------: | -------------------: | -------------------: |
-| `r_gestisciAscensore`   |          50.00% |        50.00% |                    - |                    - |
-| `r_aggiornaPersone`     |          25.00% |        25.00% |                0.00% |                    - |
-| `r_idle`                |               - |       100.00% |                0.00% |                    - |
-| `r_gestisciGuasto`      |          33.33% |        12.50% |                0.00% |                    - |
-| `r_main`                |          50.00% |       100.00% |                    - |                    - |
-| `r_acquisisciRichieste` |          50.00% |        50.00% |                0.00% |               33.33% |
-| `r_gestisciErrori`      |          50.00% |        66.67% |                    - |                    - |
+Lo scenario `scenario_richiesta_piano_inferiore.avalla` verifica il servizio di una richiesta posta sotto il piano corrente.
 
----
+La cabina viene inizialmente portata al piano `3`. Successivamente viene acquisita una richiesta verso il piano `0`.
 
-#### Regole non coperte
+Il modello imposta correttamente la direzione a `GIU` e muove la cabina fino al piano richiesto. Al raggiungimento del piano `0`, 
+la richiesta viene rimossa e le porte vengono aperte.
 
-Le seguenti regole non vengono coperte da questo scenario:
-
-```text
-r_gestisciOverload
-r_chiudiPorte
-r_scegliDirezione
-r_muoviAscensore
-r_serviPianoCorrente
-```
-
-Questo risultato è coerente con l'obiettivo dello scenario, perché il test verifica esclusivamente il comportamento del sistema in assenza di richieste.
-
-Le regole relative al movimento, alla scelta della direzione, al servizio dei piani, alla chiusura delle porte e al sovraccarico vengono invece coperte da altri scenari.
+Il risultato conferma il corretto comportamento del modello nel caso di richiesta verso un piano inferiore.
 
 ---
 
-#### Risultato finale
+### 4.4 Overload
 
-```text
-validation terminated without errors
-```
+Lo scenario `scenario_overload.avalla` verifica che il sistema entri nello stato `OVERLOAD` quando il numero di persone in cabina supera la capacità massima.
 
-**Esito:** Passed
-
----
-
-#### Osservazione
-
-Lo scenario conferma che, quando non sono presenti richieste attive e non ci sono errori, il modello mantiene l'ascensore nello stato di idle.
-
-La cabina resta ferma al piano iniziale, le porte rimangono chiuse e la direzione resta `NESSUNA`.
-
----
-
-### 2. Richiesta verso piano superiore
-
-**File AVALLA:** `scenario_richiesta_piano_superiore.avalla`
-
-#### Obiettivo
-
-Verificare che l'ascensore sia in grado di acquisire e servire una richiesta interna verso un piano superiore.
-
-Lo scenario controlla che la richiesta per il piano `3` venga registrata, che la direzione venga impostata a `SU`, che la cabina si muova progressivamente verso l'alto e che, una volta raggiunto il piano richiesto, la richiesta venga rimossa.
-
----
-
-#### Simulazione eseguita
-
-Lo scenario parte dallo stato iniziale del modello:
-
-```text
-pianoCorrente = 0
-statoCabina = FERMA
-statoPorte = CHIUSE
-direzione = NESSUNA
-statoErrore = NESSUNO
-richiesteAttive(3) = false
-```
-
-Successivamente viene generata una richiesta interna verso il piano `3`.
-
-```text
-pulsanteInterno(3) = true
-```
-
-Il sistema deve acquisire la richiesta, impostare la direzione verso l'alto e muovere la cabina fino al piano richiesto.
-
----
-
-#### Stati osservati dalla simulazione
-
-Dopo l'acquisizione della richiesta, la cabina inizia a muoversi verso l'alto:
-
-```text
-richiesteAttive(3) = true
-direzione = SU
-pianoCorrente = 1
-statoCabina = IN_MOVIMENTO
-statoPorte = CHIUSE
-```
-
-Nel passo successivo la cabina prosegue verso il piano `3`:
-
-```text
-pianoCorrente = 2
-direzione = SU
-statoPorte = CHIUSE
-```
-
-Successivamente raggiunge il piano richiesto:
-
-```text
-pianoCorrente = 3
-direzione = SU
-statoPorte = CHIUSE
-```
-
-Al passo logico seguente, il piano viene servito:
-
-```text
-pianoCorrente = 3
-richiesteAttive(3) = false
-statoCabina = FERMA
-statoPorte = APERTE
-direzione = NESSUNA
-```
-
-Infine, le porte vengono chiuse:
-
-```text
-pianoCorrente = 3
-statoCabina = FERMA
-statoPorte = CHIUSE
-direzione = NESSUNA
-```
-
----
-
-#### Check eseguiti
-
-| Check                                  | Esito  |
-| -------------------------------------- | ------ |
-| `pianoCorrente = 0`                    | Passed |
-| `statoCabina = FERMA`                  | Passed |
-| `statoPorte = CHIUSE`                  | Passed |
-| `direzione = NESSUNA`                  | Passed |
-| `statoErrore = NESSUNO`                | Passed |
-| `richiesteAttive(3) = false`           | Passed |
-| `richiesteAttive(3) = true`            | Passed |
-| `direzione = SU`                       | Passed |
-| `pianoCorrente = 1`                    | Passed |
-| `statoCabina = IN_MOVIMENTO`           | Passed |
-| `statoPorte = CHIUSE`                  | Passed |
-| `pianoCorrente = 2`                    | Passed |
-| `direzione = SU`                       | Passed |
-| `pianoCorrente = 3`                    | Passed |
-| `direzione = SU`                       | Passed |
-| `richiesteAttive(3) = false`           | Passed |
-| `statoCabina = FERMA`                  | Passed |
-| `statoPorte = APERTE`                  | Passed |
-| `direzione = NESSUNA`                  | Passed |
-| `statoPorte = CHIUSE` dopo la chiusura | Passed |
-
----
-
-#### Coverage dello scenario
-
-| Regola                  | Branch coverage | Rule coverage | Update rule coverage | Forall rule coverage |
-| ----------------------- | --------------: | ------------: | -------------------: | -------------------: |
-| `r_gestisciAscensore`   |          75.00% |        90.00% |                    - |                    - |
-| `r_aggiornaPersone`     |          75.00% |        75.00% |                0.00% |                    - |
-| `r_chiudiPorte`         |          50.00% |       100.00% |              100.00% |                    - |
-| `r_gestisciGuasto`      |          33.33% |        12.50% |                0.00% |                    - |
-| `r_scegliDirezione`     |          33.33% |        36.84% |               10.00% |                    - |
-| `r_main`                |          50.00% |       100.00% |                    - |                    - |
-| `r_acquisisciRichieste` |         100.00% |       100.00% |              100.00% |               66.67% |
-| `r_muoviAscensore`      |          33.33% |        41.67% |               33.33% |                    - |
-| `r_gestisciErrori`      |          50.00% |        66.67% |                    - |                    - |
-| `r_serviPianoCorrente`  |          50.00% |       100.00% |              100.00% |                    - |
-
----
-
-#### Regole non coperte
-
-Le seguenti regole non vengono coperte da questo scenario:
-
-```text
-r_gestisciOverload
-r_idle
-```
-
-Questo risultato è coerente con l'obiettivo dello scenario, perché il test riguarda il movimento e il servizio di una richiesta verso un piano superiore.
-
-Le regole relative al sovraccarico e allo stato di inattività vengono invece coperte da altri scenari.
-
----
-
-#### Risultato finale
-
-```text
-validation terminated without errors
-```
-
-**Esito:** Passed
-
----
-
-#### Osservazione
-
-Lo scenario conferma che il modello gestisce correttamente una richiesta interna verso un piano superiore.
-
-La richiesta del piano `3` viene acquisita, la direzione viene impostata a `SU` e la cabina si muove progressivamente dal piano `0` al piano `3`. Una volta raggiunto il piano richiesto, la cabina si ferma, apre le porte e rimuove la richiesta dalle richieste attive.
-
----
-
-### 3. Richiesta verso piano inferiore
-
-**File AVALLA:** `scenario_richiesta_piano_inferiore.avalla`
-
-#### Obiettivo
-
-Verificare che l'ascensore sia in grado di servire una richiesta posta sotto il piano corrente.
-
-Lo scenario porta inizialmente la cabina al piano `3` e successivamente genera una chiamata esterna verso il basso dal piano `0`.
-
----
-
-#### Simulazione eseguita
-
-La simulazione viene divisa in due fasi.
-
-Nella prima fase viene generata una richiesta interna verso il piano `3`, così da portare la cabina a un piano superiore.
-
-```text
-pulsanteInterno(3) = true
-```
-
-Dopo aver raggiunto il piano `3`, viene generata una chiamata esterna verso il basso dal piano `0`.
-
-```text
-chiamataPianoGiu(0) = true
-```
-
-Il sistema deve acquisire la richiesta, impostare la direzione a `GIU` e muovere progressivamente la cabina fino al piano `0`.
-
----
-
-#### Stati osservati dalla simulazione
-
-Durante la prima fase, la cabina si muove verso il piano `3`:
-
-```text
-pianoCorrente = 1
-direzione = SU
-statoCabina = IN_MOVIMENTO
-richiesteAttive(3) = true
-```
-
-Successivamente raggiunge il piano `3`, serve la richiesta e apre le porte:
-
-```text
-pianoCorrente = 3
-statoCabina = FERMA
-statoPorte = APERTE
-richiesteAttive(3) = false
-direzione = NESSUNA
-```
-
-Dopo la chiusura delle porte, viene acquisita la chiamata dal piano `0`:
-
-```text
-richiesteAttive(0) = true
-direzione = GIU
-pianoCorrente = 2
-statoCabina = IN_MOVIMENTO
-statoPorte = CHIUSE
-```
-
-La cabina prosegue verso il basso:
-
-```text
-pianoCorrente = 1
-direzione = GIU
-```
-
-poi raggiunge il piano `0`:
-
-```text
-pianoCorrente = 0
-direzione = GIU
-```
-
-Infine il piano richiesto viene servito:
-
-```text
-pianoCorrente = 0
-richiesteAttive(0) = false
-statoCabina = FERMA
-statoPorte = APERTE
-direzione = NESSUNA
-```
-
----
-
-#### Check eseguiti
-
-| Check                        | Esito  |
-| ---------------------------- | ------ |
-| `pianoCorrente = 3`          | Passed |
-| `statoPorte = CHIUSE`        | Passed |
-| `richiesteAttive(0) = true`  | Passed |
-| `direzione = GIU`            | Passed |
-| `pianoCorrente = 2`          | Passed |
-| `statoCabina = IN_MOVIMENTO` | Passed |
-| `pianoCorrente = 1`          | Passed |
-| `direzione = GIU`            | Passed |
-| `pianoCorrente = 0`          | Passed |
-| `direzione = GIU`            | Passed |
-| `richiesteAttive(0) = false` | Passed |
-| `statoCabina = FERMA`        | Passed |
-| `statoPorte = APERTE`        | Passed |
-| `direzione = NESSUNA`        | Passed |
-
----
-
-#### Coverage dello scenario
-
-| Regola                  | Branch coverage | Rule coverage | Update rule coverage | Forall rule coverage |
-| ----------------------- | --------------: | ------------: | -------------------: | -------------------: |
-| `r_gestisciAscensore`   |          75.00% |        90.00% |                    - |                    - |
-| `r_aggiornaPersone`     |          75.00% |        75.00% |                0.00% |                    - |
-| `r_chiudiPorte`         |          50.00% |       100.00% |              100.00% |                    - |
-| `r_gestisciGuasto`      |          33.33% |        12.50% |                0.00% |                    - |
-| `r_scegliDirezione`     |          55.56% |        57.89% |               20.00% |                    - |
-| `r_main`                |          50.00% |       100.00% |                    - |                    - |
-| `r_acquisisciRichieste` |         100.00% |       100.00% |              100.00% |               66.67% |
-| `r_muoviAscensore`      |          66.67% |        75.00% |               66.67% |                    - |
-| `r_gestisciErrori`      |          50.00% |        66.67% |                    - |                    - |
-| `r_serviPianoCorrente`  |          50.00% |       100.00% |              100.00% |                    - |
-
----
-
-#### Regole non coperte
-
-Le seguenti regole non vengono coperte da questo scenario:
-
-```text
-r_gestisciOverload
-r_idle
-```
-
-Questo risultato è coerente con l'obiettivo dello scenario, perché il test riguarda il movimento e il servizio di una richiesta verso un piano inferiore.
-
-Le regole relative al sovraccarico e allo stato di inattività vengono invece coperte da altri scenari.
-
----
-
-#### Risultato finale
-
-```text
-validation terminated without errors
-```
-
-**Esito:** Passed
-
----
-
-#### Osservazione
-
-Lo scenario conferma che il modello gestisce correttamente una richiesta posta sotto il piano corrente.
-
-La cabina acquisisce la chiamata dal piano `0`, imposta la direzione a `GIU`, si muove progressivamente verso il basso e, una volta raggiunto il piano richiesto, si ferma, apre le porte e rimuove la richiesta dalle richieste attive.
-
----
-
-### 4. Overload
-
-**File AVALLA:** `scenario_overload.avalla`
-
-#### Obiettivo
-
-Verificare che il sistema entri correttamente nello stato `OVERLOAD` quando il numero di persone presenti in cabina supera la capacità massima consentita.
-
-Lo scenario controlla che, in caso di sovraccarico, la cabina venga bloccata, le porte restino aperte e la direzione venga annullata.
-
----
-
-#### Simulazione eseguita
-
-Lo scenario apre inizialmente le porte al piano corrente e successivamente simula l'ingresso di un numero di persone superiore alla capacità massima.
-
-```text
-personeEntrate = 9
-personeUscite = 0
-```
-
-Poiché la capacità massima del modello è pari a `8`, il sistema deve entrare nello stato `OVERLOAD`.
-
----
-
-#### Stati osservati dalla simulazione
-
-Prima del sovraccarico, lo stato significativo osservato è:
-
-```text
-pianoCorrente = 0
-statoCabina = FERMA
-statoPorte = APERTE
-richiesteAttive(0) = false
-```
-
-Dopo l'ingresso delle persone, il sistema rileva il sovraccarico:
+Nel modello la capacità massima è pari a `8`. Simulando l'ingresso di `9` persone, il sistema assume correttamente lo stato:
 
 ```text
 numeroPersone = 9
@@ -528,121 +122,17 @@ statoPorte = APERTE
 direzione = NESSUNA
 ```
 
----
-
-#### Check eseguiti
-
-| Check                        | Esito  |
-| ---------------------------- | ------ |
-| `pianoCorrente = 0`          | Passed |
-| `statoPorte = APERTE`        | Passed |
-| `statoCabina = FERMA`        | Passed |
-| `richiesteAttive(0) = false` | Passed |
-| `numeroPersone = 9`          | Passed |
-| `statoErrore = OVERLOAD`     | Passed |
-| `statoCabina = BLOCCATA`     | Passed |
-| `statoPorte = APERTE`        | Passed |
-| `direzione = NESSUNA`        | Passed |
+Il risultato conferma che il sovraccarico viene rilevato correttamente e che la cabina viene bloccata con porte aperte.
 
 ---
 
-#### Coverage dello scenario
+### 4.5 Risoluzione overload
 
-| Regola                  | Branch coverage | Rule coverage | Update rule coverage | Forall rule coverage |
-| ----------------------- | --------------: | ------------: | -------------------: | -------------------: |
-| `r_gestisciOverload`    |          25.00% |        50.00% |               25.00% |                    - |
-| `r_gestisciAscensore`   |          37.50% |        40.00% |                    - |                    - |
-| `r_aggiornaPersone`     |          75.00% |        75.00% |               50.00% |                    - |
-| `r_gestisciGuasto`      |          33.33% |        12.50% |                0.00% |                    - |
-| `r_main`                |          75.00% |       100.00% |                    - |                    - |
-| `r_acquisisciRichieste` |         100.00% |       100.00% |              100.00% |               66.67% |
-| `r_gestisciErrori`      |         100.00% |       100.00% |                    - |                    - |
-| `r_serviPianoCorrente`  |          50.00% |       100.00% |               50.00% |                    - |
+Lo scenario `scenario_risoluzione_overload.avalla` verifica che il sistema esca correttamente dallo stato `OVERLOAD` quando il numero di persone torna entro la capacità massima.
 
----
+Dopo aver generato una condizione di sovraccarico con `9` persone, viene simulata l'uscita di una persona. Il numero di persone passa quindi a `8`.
 
-#### Regole non coperte
-
-Le seguenti regole non vengono coperte da questo scenario:
-
-```text
-r_chiudiPorte
-r_idle
-r_scegliDirezione
-r_muoviAscensore
-```
-
-Questo risultato è coerente con l'obiettivo dello scenario, perché il test è focalizzato sulla gestione del sovraccarico.
-
-Le regole relative alla chiusura delle porte, allo stato di inattività, alla scelta della direzione e al movimento della cabina vengono invece coperte da altri scenari.
-
----
-
-#### Risultato finale
-
-```text
-validation terminated without errors
-```
-
-**Esito:** Passed
-
----
-
-#### Osservazione
-
-Lo scenario conferma che il modello rileva correttamente la condizione di sovraccarico.
-
-Quando il numero di persone presenti in cabina supera la capacità massima, il sistema entra nello stato `OVERLOAD`, blocca la cabina, mantiene le porte aperte e imposta la direzione a `NESSUNA`.
-
----
-
-### 5. Risoluzione overload
-
-**File AVALLA:** `scenario_risoluzione_overload.avalla`
-
-#### Obiettivo
-
-Verificare che il sistema esca correttamente dallo stato `OVERLOAD` quando il numero di persone presenti in cabina torna entro la capacità massima consentita.
-
-Lo scenario controlla che, dopo la discesa di una persona, il numero di persone passi da `9` a `8` e che il sistema torni allo stato operativo.
-
----
-
-#### Simulazione eseguita
-
-Lo scenario genera inizialmente una condizione di sovraccarico simulando l'ingresso di un numero di persone superiore alla capacità massima.
-
-```text
-personeEntrate = 9
-personeUscite = 0
-```
-
-Il sistema entra quindi nello stato `OVERLOAD`.
-
-Successivamente viene simulata l'uscita di una persona dalla cabina:
-
-```text
-personeEntrate = 0
-personeUscite = 1
-```
-
-Poiché la capacità massima è pari a `8`, il sistema deve uscire dallo stato di sovraccarico e tornare operativo.
-
----
-
-#### Stati osservati dalla simulazione
-
-Dopo l'ingresso delle persone, il sistema rileva il sovraccarico:
-
-```text
-numeroPersone = 9
-statoErrore = OVERLOAD
-statoCabina = BLOCCATA
-statoPorte = APERTE
-direzione = NESSUNA
-```
-
-Dopo l'uscita di una persona, il numero di persone rientra nella capacità massima:
+Il sistema torna allo stato operativo:
 
 ```text
 numeroPersone = 8
@@ -652,127 +142,15 @@ statoPorte = CHIUSE
 direzione = NESSUNA
 ```
 
----
-
-#### Check eseguiti
-
-| Check                    | Esito  |
-| ------------------------ | ------ |
-| `numeroPersone = 9`      | Passed |
-| `statoErrore = OVERLOAD` | Passed |
-| `statoCabina = BLOCCATA` | Passed |
-| `statoPorte = APERTE`    | Passed |
-| `numeroPersone = 8`      | Passed |
-| `statoErrore = NESSUNO`  | Passed |
-| `statoCabina = FERMA`    | Passed |
-| `statoPorte = CHIUSE`    | Passed |
-| `direzione = NESSUNA`    | Passed |
+Il risultato conferma la corretta risoluzione dello stato di sovraccarico.
 
 ---
 
-#### Coverage dello scenario
+### 4.6 Richieste durante overload
 
-| Regola                  | Branch coverage | Rule coverage | Update rule coverage | Forall rule coverage |
-| ----------------------- | --------------: | ------------: | -------------------: | -------------------: |
-| `r_gestisciOverload`    |          75.00% |       100.00% |               62.50% |                    - |
-| `r_gestisciAscensore`   |          62.50% |        60.00% |                    - |                    - |
-| `r_aggiornaPersone`     |          75.00% |        75.00% |               50.00% |                    - |
-| `r_idle`                |               - |       100.00% |                0.00% |                    - |
-| `r_gestisciGuasto`      |          33.33% |        12.50% |                0.00% |                    - |
-| `r_main`                |          75.00% |       100.00% |                    - |                    - |
-| `r_acquisisciRichieste` |         100.00% |       100.00% |              100.00% |               66.67% |
-| `r_gestisciErrori`      |         100.00% |       100.00% |                    - |                    - |
-| `r_serviPianoCorrente`  |          50.00% |       100.00% |               50.00% |                    - |
+Lo scenario `scenario_richieste_durante_overload.avalla` verifica che, durante lo stato `OVERLOAD`, il sistema continui ad acquisire nuove richieste.
 
----
-
-#### Regole non coperte
-
-Le seguenti regole non vengono coperte da questo scenario:
-
-```text
-r_chiudiPorte
-r_scegliDirezione
-r_muoviAscensore
-```
-
-Questo risultato è coerente con l'obiettivo dello scenario, perché il test è focalizzato sulla risoluzione della condizione di sovraccarico.
-
-Le regole relative alla chiusura ordinaria delle porte, alla scelta della direzione e al movimento della cabina vengono invece coperte da altri scenari.
-
----
-
-#### Risultato finale
-
-```text
-validation terminated without errors
-```
-
-**Esito:** Passed
-
----
-
-#### Osservazione
-
-Lo scenario conferma che il modello gestisce correttamente l'uscita dallo stato `OVERLOAD`.
-
-Quando il numero di persone passa da `9` a `8`, rientrando nella capacità massima consentita, il sistema elimina lo stato di errore, riporta la cabina nello stato `FERMA`, chiude le porte e mantiene la direzione a `NESSUNA`.
-
----
-
-### 6. Richieste durante overload
-
-**File AVALLA:** `scenario_richieste_durante_overload.avalla`
-
-#### Obiettivo
-
-Verificare che, durante lo stato `OVERLOAD`, il sistema continui ad acquisire nuove richieste.
-
-Lo scenario controlla che una richiesta interna verso il piano `2`, effettuata mentre la cabina è bloccata per sovraccarico, venga comunque registrata tra le richieste attive.
-
----
-
-#### Simulazione eseguita
-
-Lo scenario genera inizialmente una condizione di sovraccarico simulando l'ingresso di un numero di persone superiore alla capacità massima.
-
-```text
-personeEntrate = 9
-personeUscite = 0
-```
-
-Successivamente, mentre il sistema si trova nello stato `OVERLOAD`, viene premuto il pulsante interno del piano `2`.
-
-```text
-pulsanteInterno(2) = true
-```
-
-Il sistema deve rimanere in stato di sovraccarico, ma deve comunque memorizzare la nuova richiesta.
-
----
-
-#### Stati osservati dalla simulazione
-
-Prima dell'ingresso nello stato di sovraccarico, lo stato significativo osservato è:
-
-```text
-statoCabina = FERMA
-statoPorte = APERTE
-direzione = NESSUNA
-richiesteAttive(0) = false
-```
-
-Dopo il superamento della capacità massima, il sistema entra nello stato `OVERLOAD`:
-
-```text
-numeroPersone = 9
-statoErrore = OVERLOAD
-statoCabina = BLOCCATA
-statoPorte = APERTE
-direzione = NESSUNA
-```
-
-Durante lo stato `OVERLOAD`, viene acquisita la richiesta del piano `2`:
+Durante il sovraccarico viene premuto il pulsante interno del piano `2`. Il modello mantiene la cabina bloccata, ma registra comunque la richiesta:
 
 ```text
 statoErrore = OVERLOAD
@@ -781,96 +159,15 @@ statoPorte = APERTE
 richiesteAttive(2) = true
 ```
 
----
-
-#### Check eseguiti
-
-| Check                       | Esito  |
-| --------------------------- | ------ |
-| `statoErrore = OVERLOAD`    | Passed |
-| `statoPorte = APERTE`       | Passed |
-| `statoCabina = BLOCCATA`    | Passed |
-| `richiesteAttive(2) = true` | Passed |
+Il risultato conferma che lo stato `OVERLOAD` non impedisce l'acquisizione di nuove richieste.
 
 ---
 
-#### Coverage dello scenario
+### 4.7 Guasto tecnico
 
-| Regola                  | Branch coverage | Rule coverage | Update rule coverage | Forall rule coverage |
-| ----------------------- | --------------: | ------------: | -------------------: | -------------------: |
-| `r_gestisciOverload`    |          25.00% |        50.00% |               25.00% |                    - |
-| `r_gestisciAscensore`   |          37.50% |        40.00% |                    - |                    - |
-| `r_aggiornaPersone`     |          75.00% |        75.00% |               50.00% |                    - |
-| `r_gestisciGuasto`      |          33.33% |        12.50% |                0.00% |                    - |
-| `r_main`                |          75.00% |       100.00% |                    - |                    - |
-| `r_acquisisciRichieste` |         100.00% |       100.00% |              100.00% |               66.67% |
-| `r_gestisciErrori`      |         100.00% |       100.00% |                    - |                    - |
-| `r_serviPianoCorrente`  |          50.00% |       100.00% |               50.00% |                    - |
+Lo scenario `scenario_guasto.avalla` verifica che, quando viene generato un evento di guasto, il sistema entri correttamente nello stato `GUASTO`.
 
----
-
-#### Regole non coperte
-
-Le seguenti regole non vengono coperte da questo scenario:
-
-```text
-r_chiudiPorte
-r_idle
-r_scegliDirezione
-r_muoviAscensore
-```
-
-Questo risultato è coerente con l'obiettivo dello scenario, perché il test è focalizzato sulla gestione delle richieste durante il sovraccarico.
-
-Le regole relative alla chiusura delle porte, allo stato di inattività, alla scelta della direzione e al movimento della cabina vengono invece coperte da altri scenari.
-
----
-
-#### Risultato finale
-
-```text
-validation terminated without errors
-```
-
-**Esito:** Passed
-
----
-
-#### Osservazione
-
-Lo scenario conferma che il modello distingue correttamente lo stato `OVERLOAD` dallo stato `GUASTO`.
-
-Durante il sovraccarico, la cabina rimane bloccata e le porte restano aperte, ma il controllore continua ad acquisire nuove richieste. La richiesta del piano `2` viene quindi registrata correttamente tra le richieste attive.
-
----
-
-### 7. Guasto tecnico
-
-**File AVALLA:** `scenario_guasto.avalla`
-
-#### Obiettivo
-
-Verificare che il sistema entri correttamente nello stato `GUASTO` quando viene generato un evento di guasto.
-
-Lo scenario controlla che, a seguito dell'attivazione del guasto, la cabina venga bloccata, le porte vengano chiuse, la direzione venga annullata e il timer di ripristino venga inizializzato.
-
----
-
-#### Simulazione eseguita
-
-Lo scenario genera un evento di guasto sul sistema.
-
-```text
-eventoGuasto = true
-```
-
-Il sistema deve entrare nello stato `GUASTO` e impedire il normale movimento della cabina.
-
----
-
-#### Stati osservati dalla simulazione
-
-Dopo l'attivazione del guasto, lo stato significativo osservato è:
+Dopo l'attivazione del guasto, lo stato osservato è:
 
 ```text
 statoErrore = GUASTO
@@ -880,511 +177,99 @@ direzione = NESSUNA
 timer = 10
 ```
 
-Dopo un ulteriore aggiornamento della simulazione, il sistema rimane nello stato di guasto:
+Il risultato conferma che il guasto blocca la cabina, chiude le porte, annulla la direzione e inizializza il timer di ripristino.
+
+---
+
+### 4.8 Blocco delle richieste durante guasto
+
+Lo scenario `scenario_blocco_richieste_durante_guasto.avalla` verifica che, durante lo stato `GUASTO`, il sistema non acquisisca nuove richieste.
+
+Dopo l'ingresso nello stato di guasto viene simulata la pressione del pulsante interno del piano `4`.
+
+Il modello mantiene la richiesta non attiva:
 
 ```text
-statoErrore = GUASTO
-statoCabina = BLOCCATA
-statoPorte = CHIUSE
-direzione = NESSUNA
-timer = 10
-```
-
----
-
-#### Check eseguiti
-
-| Check                    | Esito  |
-| ------------------------ | ------ |
-| `statoErrore = GUASTO`   | Passed |
-| `statoCabina = BLOCCATA` | Passed |
-| `statoPorte = CHIUSE`    | Passed |
-| `direzione = NESSUNA`    | Passed |
-| `timer = 10`             | Passed |
-
----
-
-#### Coverage dello scenario
-
-| Regola                  | Branch coverage | Rule coverage | Update rule coverage | Forall rule coverage |
-| ----------------------- | --------------: | ------------: | -------------------: | -------------------: |
-| `r_aggiornaPersone`     |          25.00% |        25.00% |                0.00% |                    - |
-| `r_gestisciGuasto`      |          33.33% |        50.00% |               27.27% |                    - |
-| `r_main`                |          50.00% |        85.71% |                    - |                    - |
-| `r_acquisisciRichieste` |          50.00% |        50.00% |                0.00% |               33.33% |
-| `r_gestisciErrori`      |          50.00% |        66.67% |                    - |                    - |
-
----
-
-#### Regole non coperte
-
-Le seguenti regole non vengono coperte da questo scenario:
-
-```text
-r_gestisciOverload
-r_gestisciAscensore
-r_chiudiPorte
-r_idle
-r_scegliDirezione
-r_muoviAscensore
-r_serviPianoCorrente
-```
-
-Questo risultato è coerente con l'obiettivo dello scenario, perché il test verifica esclusivamente l'ingresso nello stato `GUASTO`.
-
-Le regole relative al movimento, al servizio dei piani, allo stato di inattività e al sovraccarico vengono invece coperte da altri scenari specifici.
-
----
-
-#### Risultato finale
-
-```text
-validation terminated without errors
-```
-
-**Esito:** Passed
-
----
-
-#### Osservazione
-
-Lo scenario conferma che il modello gestisce correttamente l'attivazione di un guasto tecnico.
-
-Quando viene generato l'evento di guasto, il sistema entra nello stato `GUASTO`, blocca la cabina, chiude le porte, annulla la direzione e inizializza il timer di ripristino a `10`.
-
----
-
-### 8. Blocco delle richieste durante guasto
-
-**File AVALLA:** `scenario_blocco_richieste_durante_guasto.avalla`
-
-#### Obiettivo
-
-Verificare che, quando il sistema si trova nello stato `GUASTO`, non vengano acquisite nuove richieste.
-
-Lo scenario controlla in particolare che la pressione del pulsante interno del piano `4`, effettuata durante il guasto, 
-non venga registrata tra le richieste attive.
-
----
-
-#### Simulazione eseguita
-
-Lo scenario porta il sistema nello stato di guasto e successivamente imposta:
-
-```text
-pulsanteInterno(4) = true
-```
-
-Il sistema deve rimanere bloccato e non deve acquisire la richiesta del piano `4`.
-
----
-
-#### Stati osservati dalla simulazione
-
-Dopo l'attivazione del guasto, lo stato significativo osservato è:
-
-```text
-statoErrore = GUASTO
-statoCabina = BLOCCATA
-statoPorte = CHIUSE
-direzione = NESSUNA
-timer = 10
-```
-
-Dopo un ulteriore passo logico, il timer viene decrementato e la richiesta non viene acquisita:
-
-```text
-statoErrore = GUASTO
-statoCabina = BLOCCATA
-statoPorte = CHIUSE
-timer = 9
 richiesteAttive(4) = false
 ```
 
----
-
-#### Check eseguiti
-
-| Check                                       | Esito  |
-| ------------------------------------------- | ------ |
-| `statoErrore = GUASTO`                      | Passed |
-| `timer = 10`                                | Passed |
-| `statoErrore = GUASTO` dopo un passo logico | Passed |
-| `timer = 9`                                 | Passed |
-| `richiesteAttive(4) = false`                | Passed |
-| `statoCabina = BLOCCATA`                    | Passed |
-| `statoPorte = CHIUSE`                       | Passed |
+Il risultato conferma che durante il guasto l'acquisizione di nuove richieste viene sospesa.
 
 ---
 
-#### Coverage dello scenario
+### 4.9 Conservazione delle richieste durante guasto
 
-| Regola                  | Branch coverage | Rule coverage | Update rule coverage | Forall rule coverage |
-| ----------------------- | --------------: | ------------: | -------------------: | -------------------: |
-| `r_aggiornaPersone`     |          25.00% |        25.00% |                0.00% |                    - |
-| `r_gestisciGuasto`      |          66.67% |        62.50% |               36.36% |                    - |
-| `r_main`                |          75.00% |        85.71% |                    - |                    - |
-| `r_acquisisciRichieste` |          50.00% |        50.00% |                0.00% |               33.33% |
-| `r_gestisciErrori`      |          50.00% |        66.67% |                    - |                    - |
+Lo scenario `scenario_conservazione_richieste_guasto.avalla` verifica che una richiesta acquisita prima del guasto non venga cancellata.
 
----
-
-#### Regole non coperte
-
-Le seguenti regole non vengono coperte da questo scenario:
-
-```text
-r_gestisciOverload
-r_gestisciAscensore
-r_chiudiPorte
-r_idle
-r_scegliDirezione
-r_muoviAscensore
-r_serviPianoCorrente
-```
-
-Questo risultato è coerente con l'obiettivo dello scenario, perché il test è focalizzato sulla gestione dello stato `GUASTO`.
-
-Le regole relative a movimento, servizio dei piani, idle e overload vengono invece coperte da altri scenari.
-
----
-
-#### Risultato finale
-
-```text
-validation terminated without errors
-```
-
-**Esito:** Passed
-
----
-
-#### Osservazione
-
-Lo scenario conferma che, durante lo stato `GUASTO`, il modello sospende correttamente l'acquisizione di nuove richieste.
-
-La richiesta del piano `4` non viene inserita tra le richieste attive, mentre il sistema rimane nello stato `GUASTO`, 
-con cabina bloccata e porte chiuse.
-
----
-
-### 9. Conservazione delle richieste durante guasto
-
-**File AVALLA:** `scenario_conservazione_richieste_guasto.avalla`
-
-#### Obiettivo
-
-Verificare che una richiesta già acquisita prima dell'ingresso nello stato `GUASTO` non venga cancellata.
-
-Lo scenario controlla in particolare che la richiesta del piano `3`, registrata prima del guasto, rimanga attiva anche dopo il blocco della cabina.
-
----
-
-#### Simulazione eseguita
-
-Lo scenario acquisisce inizialmente una richiesta per il piano `3`.
+La richiesta del piano `3` viene acquisita prima dell'attivazione del guasto. Dopo l'ingresso nello stato `GUASTO`, la richiesta risulta ancora attiva:
 
 ```text
 richiesteAttive(3) = true
 ```
 
-Successivamente viene generato un guasto tramite:
-
-```text
-eventoGuasto = true
-```
-
-Il sistema deve entrare nello stato `GUASTO`, bloccare la cabina e mantenere attiva la richiesta precedentemente acquisita.
+Il risultato conferma che il modello conserva correttamente le richieste già presenti prima del guasto.
 
 ---
 
-#### Stati osservati dalla simulazione
+### 4.10 Ripristino dopo guasto
 
-Dopo l'acquisizione della richiesta, lo stato significativo osservato è:
+Lo scenario `scenario_ripristino_guasto.avalla` verifica il decremento del timer di ripristino e il ritorno del sistema allo stato operativo.
 
-```text
-pianoCorrente = 1
-direzione = SU
-statoCabina = IN_MOVIMENTO
-richiesteAttive(3) = true
-```
-
-Dopo l'attivazione del guasto, la cabina viene bloccata ma la richiesta resta memorizzata:
+Dopo l'attivazione del guasto, il timer viene inizializzato a `10` e decrementato progressivamente:
 
 ```text
-statoErrore = GUASTO
-statoCabina = BLOCCATA
-statoPorte = CHIUSE
-direzione = NESSUNA
 timer = 10
-richiesteAttive(3) = true
-```
-
----
-
-#### Check eseguiti
-
-| Check                                      | Esito  |
-| ------------------------------------------ | ------ |
-| `richiesteAttive(3) = true`                | Passed |
-| `pianoCorrente = 1`                        | Passed |
-| `statoErrore = GUASTO`                     | Passed |
-| `statoCabina = BLOCCATA`                   | Passed |
-| `statoPorte = CHIUSE`                      | Passed |
-| `direzione = NESSUNA`                      | Passed |
-| `richiesteAttive(3) = true` dopo il guasto | Passed |
-
----
-
-#### Coverage dello scenario
-
-| Regola                  | Branch coverage | Rule coverage | Update rule coverage | Forall rule coverage |
-| ----------------------- | --------------: | ------------: | -------------------: | -------------------: |
-| `r_gestisciAscensore`   |          50.00% |        70.00% |                    - |                    - |
-| `r_aggiornaPersone`     |          25.00% |        25.00% |                0.00% |                    - |
-| `r_gestisciGuasto`      |          50.00% |        50.00% |               36.36% |                    - |
-| `r_scegliDirezione`     |          22.22% |        26.32% |               10.00% |                    - |
-| `r_main`                |          75.00% |       100.00% |                    - |                    - |
-| `r_acquisisciRichieste` |         100.00% |       100.00% |              100.00% |               66.67% |
-| `r_muoviAscensore`      |          33.33% |        41.67% |               33.33% |                    - |
-| `r_gestisciErrori`      |          50.00% |        66.67% |                    - |                    - |
-
----
-
-#### Regole non coperte
-
-Le seguenti regole non vengono coperte da questo scenario:
-
-```text
-r_gestisciOverload
-r_chiudiPorte
-r_idle
-r_serviPianoCorrente
-```
-
-Questo risultato è coerente con l'obiettivo dello scenario, perché il test verifica la conservazione di una richiesta durante l'ingresso nello stato `GUASTO`.
-
-Le regole relative al sovraccarico, alla chiusura delle porte, allo stato di inattività e al servizio effettivo del piano vengono invece coperte da altri scenari.
-
----
-
-#### Risultato finale
-
-```text
-validation terminated without errors
-```
-
-**Esito:** Passed
-
----
-
-#### Osservazione
-
-Lo scenario conferma che il modello conserva correttamente le richieste già acquisite prima di un guasto.
-
-La richiesta del piano `3` rimane attiva anche dopo l'ingresso nello stato `GUASTO`, mentre la cabina viene bloccata, le porte vengono chiuse e la direzione viene annullata.
-
----
-
-### 10. Ripristino dopo guasto
-
-**File AVALLA:** `scenario_ripristino_guasto.avalla`
-
-#### Obiettivo
-
-Verificare che, dopo l'ingresso nello stato `GUASTO`, il sistema decrementi correttamente il timer di ripristino e torni allo stato operativo quando il timer raggiunge `0`.
-
-Lo scenario controlla che durante il guasto la cabina resti bloccata e che, al termine del timeout, lo stato di errore venga riportato a `NESSUNO`.
-
----
-
-#### Simulazione eseguita
-
-Lo scenario genera inizialmente un guasto tecnico.
-
-```text
-eventoGuasto = true
-```
-
-Il sistema entra nello stato `GUASTO` e inizializza il timer a `10`.
-
-Successivamente, con il guasto non più attivo:
-
-```text
-eventoGuasto = false
-```
-
-il timer viene decrementato progressivamente fino a `0`.
-
----
-
-#### Stati osservati dalla simulazione
-
-Dopo l'attivazione del guasto, lo stato significativo osservato è:
-
-```text
-statoErrore = GUASTO
-statoCabina = BLOCCATA
-statoPorte = CHIUSE
-direzione = NESSUNA
-timer = 10
-```
-
-Durante la fase di ripristino, il timer viene decrementato mantenendo il sistema nello stato `GUASTO`:
-
-```text
 timer = 9
-statoErrore = GUASTO
-```
-
-```text
 timer = 8
-statoErrore = GUASTO
-```
-
-```text
-timer = 7
-statoErrore = GUASTO
-```
-
-```text
-timer = 6
-statoErrore = GUASTO
-```
-
-```text
-timer = 5
-statoErrore = GUASTO
-```
-
-```text
-timer = 4
-statoErrore = GUASTO
-```
-
-```text
-timer = 3
-statoErrore = GUASTO
-```
-
-```text
-timer = 2
-statoErrore = GUASTO
-```
-
-```text
+...
 timer = 1
-statoErrore = GUASTO
+timer = 0
 ```
 
-Quando il timer arriva a `0`, il sistema risulta ancora nello stato `GUASTO` per quel passo logico:
+Quando il timer raggiunge `0`, il sistema completa il ripristino nel passo logico successivo:
 
 ```text
-timer = 0
-statoErrore = GUASTO
-```
-
-Nel passo successivo viene completato il ripristino:
-
-```text
-timer = 0
 statoErrore = NESSUNO
 statoCabina = FERMA
 statoPorte = CHIUSE
 direzione = NESSUNA
+timer = 0
 ```
 
----
-
-#### Check eseguiti
-
-| Check                                      | Esito  |
-| ------------------------------------------ | ------ |
-| `statoErrore = GUASTO`                     | Passed |
-| `timer = 10`                               | Passed |
-| `timer = 9`                                | Passed |
-| `timer = 8`                                | Passed |
-| `timer = 7`                                | Passed |
-| `timer = 6`                                | Passed |
-| `timer = 5`                                | Passed |
-| `timer = 4`                                | Passed |
-| `timer = 3`                                | Passed |
-| `timer = 2`                                | Passed |
-| `timer = 1`                                | Passed |
-| `timer = 0`                                | Passed |
-| `statoErrore = GUASTO` con `timer = 0`     | Passed |
-| `statoErrore = NESSUNO` dopo il ripristino | Passed |
-| `statoCabina = FERMA`                      | Passed |
-| `statoPorte = CHIUSE`                      | Passed |
-| `direzione = NESSUNA`                      | Passed |
+Il risultato conferma che il modello gestisce correttamente il ripristino dopo un guasto tecnico.
 
 ---
 
-#### Coverage dello scenario
+## 5. Esito complessivo della validazione AVALLA
 
-| Regola                  | Branch coverage | Rule coverage | Update rule coverage | Forall rule coverage |
-| ----------------------- | --------------: | ------------: | -------------------: | -------------------: |
-| `r_gestisciAscensore`   |          50.00% |        50.00% |                    - |                    - |
-| `r_aggiornaPersone`     |          25.00% |        25.00% |                0.00% |                    - |
-| `r_idle`                |               - |       100.00% |                0.00% |                    - |
-| `r_gestisciGuasto`      |          83.33% |       100.00% |               54.55% |                    - |
-| `r_main`                |         100.00% |       100.00% |                    - |                    - |
-| `r_acquisisciRichieste` |          50.00% |        50.00% |                0.00% |               33.33% |
-| `r_gestisciErrori`      |          50.00% |        66.67% |                    - |                    - |
+Tutti gli scenari AVALLA manuali terminano senza errori.
 
----
+La validazione conferma che il modello ASM rispetta i principali requisiti funzionali considerati:
 
-#### Regole non coperte
+| Aspetto verificato                     | Esito  |
+| -------------------------------------- | ------ |
+| Stato di idle                          | Passed |
+| Movimento verso l'alto                 | Passed |
+| Movimento verso il basso               | Passed |
+| Servizio del piano richiesto           | Passed |
+| Apertura e chiusura porte              | Passed |
+| Rimozione delle richieste servite      | Passed |
+| Gestione sovraccarico                  | Passed |
+| Risoluzione sovraccarico               | Passed |
+| Gestione guasto                        | Passed |
+| Blocco nuove richieste durante guasto  | Passed |
+| Conservazione richieste durante guasto | Passed |
+| Ripristino dopo guasto                 | Passed |
 
-Le seguenti regole non vengono coperte da questo scenario:
-
-```text
-r_gestisciOverload
-r_chiudiPorte
-r_scegliDirezione
-r_muoviAscensore
-r_serviPianoCorrente
-```
-
-Questo risultato è coerente con l'obiettivo dello scenario, perché il test è focalizzato sul decremento del timer e sul ripristino dello stato operativo dopo un guasto.
-
-Le regole relative al sovraccarico, alla scelta della direzione, al movimento e al servizio dei piani vengono invece coperte da altri scenari.
+L'analisi di coverage mostra che gli scenari manuali coprono complessivamente le principali regole del modello.
 
 ---
 
-#### Risultato finale
+## 6. Generazione automatica di scenari con ATGT
 
-```text
-validation terminated without errors
-```
+Oltre agli scenari AVALLA manuali, è stato utilizzato ATGT per generare automaticamente ulteriori scenari di test.
 
-**Esito:** Passed
-
----
-
-#### Osservazione
-
-Lo scenario conferma che il modello gestisce correttamente il ripristino dopo un guasto.
-
-Durante lo stato `GUASTO`, il timer viene decrementato progressivamente da `10` a `0`. Quando il timer raggiunge `0`, il sistema completa il ripristino nel passo logico successivo, riportando `statoErrore` a `NESSUNO`, la cabina a `FERMA`, le porte a `CHIUSE` e la direzione a `NESSUNA`.
-
----
-
-## Generazione automatica di scenari con ATGT
-
-Oltre agli scenari AVALLA definiti manualmente, il modello è stato analizzato anche tramite ATGT, utilizzato per generare automaticamente scenari di test.
-
-L'obiettivo dell'utilizzo di ATGT è stato quello di affiancare alla validazione manuale una forma di esplorazione automatica del modello, generando sequenze di input e controlli sullo stato del sistema.
-
-Gli scenari manuali AVALLA sono stati progettati per verificare casi specifici e significativi, come il movimento della cabina, la gestione del sovraccarico e la gestione del guasto.
-
-Gli scenari generati tramite ATGT, invece, sono stati utilizzati per esplorare ulteriori configurazioni raggiungibili del modello.
-
----
-
-### Scenari generati
-
-ATGT ha generato i seguenti scenari AVALLA:
+Gli scenari generati sono:
 
 ```text
 testtest0.avalla
@@ -1394,13 +279,16 @@ testtest6.avalla
 testtest8.avalla
 ```
 
-Gli scenari sono stati salvati in una cartella separata rispetto agli scenari manuali, in modo da distinguere chiaramente la validazione progettata manualmente dalla generazione automatica.
+Questi scenari sono stati mantenuti in una cartella separata rispetto agli scenari manuali, 
+così da distinguere chiaramente la validazione progettata manualmente dalla generazione automatica.
 
 ---
 
-### Comportamenti osservati
+## 7. Risultati degli scenari ATGT
 
-Gli scenari generati da ATGT hanno permesso di osservare principalmente:
+Gli scenari generati automaticamente hanno permesso di osservare ulteriori configurazioni raggiungibili del modello.
+
+I comportamenti principali osservati sono:
 
 - acquisizione automatica di più richieste contemporanee;
 - ingresso nello stato `GUASTO`;
@@ -1412,58 +300,11 @@ Gli scenari generati da ATGT hanno permesso di osservare principalmente:
 - blocco della cabina durante il sovraccarico;
 - conservazione delle richieste già acquisite.
 
-In particolare, alcuni scenari generati attivano immediatamente l'evento di guasto:
-
-```text
-eventoGuasto = true
-```
-
-e verificano che il sistema assuma correttamente lo stato:
-
-```text
-statoErrore = GUASTO
-statoCabina = BLOCCATA
-statoPorte = CHIUSE
-direzione = NESSUNA
-timer = 10
-```
-
-Nei passi successivi viene inoltre verificato il decremento del timer:
-
-```text
-timer = 9
-timer = 8
-timer = 7
-...
-timer = 1
-```
-
-Altri scenari generati esplorano invece condizioni di sovraccarico, verificando che il sistema entri nello stato:
-
-```text
-statoErrore = OVERLOAD
-statoCabina = BLOCCATA
-statoPorte = APERTE
-direzione = NESSUNA
-```
+Gli scenari ATGT confermano quindi la coerenza generale del modello anche su sequenze di input generate automaticamente.
 
 ---
 
-### Differenza rispetto agli scenari manuali
-
-Gli scenari AVALLA manuali sono stati utilizzati per verificare requisiti funzionali precisi e facilmente interpretabili.
-
-Gli scenari generati da ATGT hanno invece un ruolo complementare: permettono di esplorare automaticamente il comportamento del modello su sequenze di input più ampie e meno guidate.
-
-| Tipo di scenario          | Scopo                                                |
-| ------------------------- | ---------------------------------------------------- |
-| Scenari AVALLA manuali    | Verifica mirata dei requisiti principali             |
-| Scenari generati con ATGT | Esplorazione automatica di ulteriori configurazioni  |
-| Coverage                  | Valutazione della copertura delle regole del modello |
-
----
-
-### Osservazioni sui valori generati
+## 8. Osservazioni sui valori generati da ATGT
 
 Alcuni scenari generati da ATGT contengono valori molto elevati o negativi per le variabili `personeEntrate` e `personeUscite`.
 
@@ -1474,60 +315,46 @@ personeEntrate := -468688956
 personeUscite := -1007009643
 ```
 
-Questi valori non rappresentano casi realistici dal punto di vista applicativo, ma derivano dal fatto che tali variabili sono modellate come `Integer` e quindi ATGT può generare valori interi arbitrari.
+Questi valori non rappresentano casi realistici dal punto di vista applicativo, ma derivano dal fatto che tali variabili sono modellate come `Integer`.
 
-Nonostante ciò, gli scenari risultano utili per verificare la robustezza logica del modello rispetto a configurazioni estreme.
+Gli scenari risultano comunque utili per osservare la robustezza logica del modello rispetto a configurazioni estreme.
 
-Questa osservazione evidenzia una possibile estensione futura del modello: limitare il dominio di `personeEntrate` e `personeUscite` a valori più realistici, ad esempio mediante domini finiti o vincoli sugli input.
-
----
-
-### Risultato complessivo
-
-Gli scenari generati automaticamente hanno confermato la coerenza generale del modello rispetto ai comportamenti esplorati.
-
-In particolare, il modello mantiene correttamente gli stati di sicurezza durante condizioni anomale:
-
-- in stato `GUASTO`, la cabina resta bloccata, le porte restano chiuse e il timer viene decrementato;
-- in stato `OVERLOAD`, la cabina resta bloccata, le porte restano aperte e la direzione viene annullata;
-- le richieste già acquisite vengono mantenute nello stato del sistema.
-
-ATGT è stato quindi utilizzato come supporto alla validazione manuale, aumentando la confidenza sul comportamento complessivo del modello.
+Una possibile estensione futura consiste nel limitare il dominio di `personeEntrate` e `personeUscite` a valori realistici, 
+ad esempio mediante domini finiti o vincoli sugli input.
 
 ---
 
-## Model checking con AsmetaSMV
+## 9. Model checking con AsmetaSMV
 
-Oltre alla validazione mediante scenari AVALLA manuali e scenari generati automaticamente con ATGT, il modello è stato analizzato anche tramite model checking con AsmetaSMV.
+Oltre alla validazione mediante scenari AVALLA e ATGT, il modello è stato analizzato tramite model checking con AsmetaSMV.
 
-Il model checking è stato utilizzato per verificare proprietà CTL relative alla sicurezza del sistema e alla raggiungibilità di alcuni stati significativi.
+Il model checking è stato utilizzato per verificare proprietà CTL relative a:
 
-A causa dell'elevato numero di stati generato dal modello completo, è stata realizzata una versione ridotta del modello ASM, denominata `ascensore_smv_small.asm`.
+- sicurezza del movimento;
+- gestione delle porte;
+- comportamento in stato di guasto;
+- raggiungibilità degli stati principali.
 
-La versione ridotta mantiene la logica essenziale del sistema, cioè:
+A causa dell'elevato numero di stati generato dal modello completo, è stata realizzata una versione ridotta del modello ASM:
+
+```text
+ascensore_smv_small.asm
+```
+
+La versione ridotta mantiene la logica essenziale del sistema:
 
 - acquisizione delle richieste;
 - movimento della cabina;
 - apertura e chiusura delle porte;
 - gestione dello stato di guasto.
 
-Rispetto al modello completo, sono stati limitati il numero di piani e sono state rimosse alcune estensioni, come la gestione del sovraccarico e del numero di persone, 
-al fine di contenere lo spazio degli stati generato dal model checker.
-
-Questa riduzione non modifica l'obiettivo della verifica, poiché le proprietà controllate riguardano principalmente la sicurezza del movimento, 
-la corretta gestione delle porte e il comportamento del sistema in presenza di guasto.
+Rispetto al modello completo, sono stati limitati il numero di piani e il dominio del timer. Inoltre, sono state rimosse alcune estensioni, come la gestione del sovraccarico e del numero di persone, per contenere lo spazio degli stati generato dal model checker.
 
 ---
 
-### Modello utilizzato per AsmetaSMV
+## 10. Modello utilizzato per AsmetaSMV
 
-Il modello utilizzato per il model checking è il seguente:
-
-```text
-ascensore_smv_small.asm
-```
-
-La versione ridotta considera tre piani:
+Il modello ridotto utilizzato per il model checking considera tre piani:
 
 ```text
 0, 1, 2
@@ -1545,13 +372,13 @@ Il timer di ripristino è stato limitato al dominio:
 Timer = {0, 1, 2}
 ```
 
-Questa scelta permette di verificare le proprietà principali evitando l'esplosione dello spazio degli stati.
+Questa riduzione permette di verificare le proprietà principali evitando l'esplosione dello spazio degli stati.
 
 ---
 
-### Proprietà CTL verificate
+## 11. Proprietà CTL verificate
 
-Le proprietà CTL definite nel modello sono state tradotte automaticamente da AsmetaSMV in specifiche NuSMV, denominate `ctl0`, `ctl1`, ..., `ctl13`.
+Le proprietà CTL definite nel modello sono state tradotte automaticamente da AsmetaSMV in specifiche NuSMV denominate `ctl0`, `ctl1`, ..., `ctl13`.
 
 | Proprietà | Descrizione                                                                |
 | --------- | -------------------------------------------------------------------------- |
@@ -1572,9 +399,9 @@ Le proprietà CTL definite nel modello sono state tradotte automaticamente da As
 
 ---
 
-### Proprietà di sicurezza
+### 11.1 Proprietà di sicurezza
 
-Le proprietà principali di sicurezza verificate sono:
+Le principali proprietà di sicurezza verificate sono:
 
 ```text
 AG(statoCabina = IN_MOVIMENTO -> statoPorte = CHIUSE)
@@ -1608,11 +435,11 @@ Questa proprietà verifica che, in caso di guasto, la direzione venga annullata.
 
 ---
 
-### Proprietà di raggiungibilità
+### 11.2 Proprietà di raggiungibilità
 
 Oltre alle proprietà di sicurezza, sono state verificate anche proprietà di raggiungibilità.
 
-In particolare, il model checking conferma che:
+Il model checking conferma che:
 
 - da ogni stato è possibile raggiungere uno stato senza guasto;
 - da ogni stato è possibile raggiungere uno stato con cabina ferma;
@@ -1620,61 +447,41 @@ In particolare, il model checking conferma che:
 - è raggiungibile un movimento verso il basso;
 - è raggiungibile lo stato di guasto.
 
-Queste proprietà permettono di verificare che il modello non rimanga bloccato in stati anomali non recuperabili e che i principali comportamenti del sistema siano effettivamente esplorabili.
+Queste proprietà permettono di verificare che il modello non rimanga bloccato in stati anomali non recuperabili e 
+che i principali comportamenti del sistema siano effettivamente esplorabili.
 
 ---
 
-### File SMV generato
-
-AsmetaSMV genera automaticamente un file NuSMV a partire dal modello ASM ridotto.
-
-Il file generato è:
-
-```text
-ascensore_smv_small.smv
-```
-
-Nel file SMV vengono introdotti valori ausiliari di tipo `UNDEF`, utilizzati dal traduttore per rappresentare configurazioni non definite dei domini ASM.
-
-Ad esempio, per i domini enumerativi vengono aggiunti valori come:
-
-```text
-DIREZIONE_UNDEF
-STATOCABINA_UNDEF
-STATOERRORE_UNDEF
-STATOPORTE_UNDEF
-```
-
-Per i domini numerici può inoltre comparire un valore speciale, come:
-
-```text
--2147483647
-```
-
-Questo valore non rappresenta un piano reale del sistema, ma viene usato internamente dal traduttore come valore ausiliario.
-
----
-
-### Esito del model checking
+## 12. Esito del model checking
 
 L'esecuzione del model checking sul modello ridotto termina correttamente.
 
 Le proprietà CTL definite risultano verificate e confermano la correttezza del comportamento del modello rispetto agli aspetti di sicurezza considerati.
 
-In particolare, il sistema impedisce il movimento della cabina con porte aperte, impedisce il movimento durante un guasto e garantisce che, in caso di guasto, la cabina venga bloccata, le porte vengano chiuse e la direzione venga annullata.
+In particolare, il sistema:
 
-Il model checking conferma inoltre che gli stati principali del sistema sono raggiungibili e che il guasto non rappresenta uno stato permanente non recuperabile.
+- impedisce il movimento della cabina con porte aperte;
+- impedisce il movimento durante un guasto;
+- blocca la cabina in caso di guasto;
+- mantiene le porte chiuse in caso di guasto;
+- annulla la direzione in caso di guasto;
+- permette il ritorno a uno stato senza guasto;
+- rende raggiungibili gli stati principali del sistema.
 
 ---
 
-## Conclusione
+## 13. Conclusione
 
-La validazione tramite scenari AVALLA manuali, scenari generati automaticamente con ATGT e model checking con AsmetaSMV conferma la coerenza del modello rispetto alle principali situazioni operative considerate e alle proprietà di sicurezza definite.
+La validazione tramite scenari AVALLA manuali, scenari generati automaticamente con ATGT e model checking con AsmetaSMV conferma la coerenza del modello ASM 
+rispetto alle principali situazioni operative considerate e alle proprietà di sicurezza definite.
 
-Gli scenari AVALLA manuali permettono di verificare in modo mirato il funzionamento ordinario dell'ascensore e la gestione delle condizioni anomale, distinguendo correttamente tra sovraccarico e guasto.
+Gli scenari AVALLA manuali hanno permesso di verificare in modo mirato il funzionamento ordinario dell'ascensore e la gestione delle condizioni anomale, 
+distinguendo correttamente tra sovraccarico e guasto.
 
-Gli scenari generati con ATGT permettono invece di esplorare automaticamente ulteriori configurazioni del modello, aumentando la copertura e la confidenza nella correttezza del comportamento complessivo.
+Gli scenari generati con ATGT hanno permesso di esplorare automaticamente ulteriori configurazioni del modello, 
+aumentando la copertura e la confidenza nella correttezza del comportamento complessivo.
 
-Il model checking con AsmetaSMV permette infine di verificare formalmente proprietà CTL relative alla sicurezza del movimento, alla gestione delle porte, allo stato di guasto e alla raggiungibilità degli stati principali.
+Il model checking con AsmetaSMV ha permesso di verificare formalmente proprietà CTL relative alla sicurezza del movimento, 
+alla gestione delle porte, allo stato di guasto e alla raggiungibilità degli stati principali.
 
 Nel complesso, il modello risulta coerente con i requisiti funzionali e con le principali proprietà di sicurezza definite nella documentazione di progetto.
