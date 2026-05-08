@@ -166,37 +166,45 @@ public class Ascensore {
         }
     }
 
-	  /*@
-	  @ ensures \old(numeroPersone) > CAPACITA_MASSIMA ==>
-	  @     statoErrore == StatoErrore.OVERLOAD &&
-	  @     statoCabina == StatoCabina.BLOCCATA &&
-	  @     statoPorte == StatoPorte.APERTE &&
-	  @     direzione == Direzione.NESSUNA &&
-	  @     timer == 0;
-	  @
-	  @ ensures \old(statoErrore) == StatoErrore.OVERLOAD &&
-	  @         \old(numeroPersone) <= CAPACITA_MASSIMA ==>
-	  @     statoErrore == StatoErrore.NESSUNO &&
-	  @     statoCabina == StatoCabina.FERMA &&
-	  @     statoPorte == StatoPorte.CHIUSE &&
-	  @     direzione == Direzione.NESSUNA &&
-	  @     timer == 0;
-	  @*/
-	public void gestisciSovraccarico() {
-	    if (numeroPersone > CAPACITA_MASSIMA) {
-	        statoErrore = StatoErrore.OVERLOAD;
-	        statoCabina = StatoCabina.BLOCCATA;
-	        statoPorte = StatoPorte.APERTE;
-	        direzione = Direzione.NESSUNA;
-	        timer = 0;
-	    } else if (statoErrore == StatoErrore.OVERLOAD && numeroPersone <= CAPACITA_MASSIMA) {
-	        statoErrore = StatoErrore.NESSUNO;
-	        statoCabina = StatoCabina.FERMA;
-	        statoPorte = StatoPorte.CHIUSE;
-	        direzione = Direzione.NESSUNA;
-	        timer = 0;
-	    }
-	}
+    /*@
+      @ ensures \old(numeroPersone) > CAPACITA_MASSIMA ==>
+      @     statoErrore == StatoErrore.OVERLOAD &&
+      @     statoCabina == StatoCabina.BLOCCATA &&
+      @     statoPorte == StatoPorte.APERTE &&
+      @     direzione == Direzione.NESSUNA &&
+      @     timer == 0;
+      @
+      @ ensures \old(numeroPersone) <= CAPACITA_MASSIMA &&
+      @         \old(statoErrore) == StatoErrore.OVERLOAD ==>
+      @     statoErrore == StatoErrore.NESSUNO &&
+      @     statoCabina == StatoCabina.FERMA &&
+      @     statoPorte == StatoPorte.CHIUSE &&
+      @     direzione == Direzione.NESSUNA &&
+      @     timer == 0;
+      @
+      @ ensures \old(numeroPersone) <= CAPACITA_MASSIMA &&
+      @         \old(statoErrore) != StatoErrore.OVERLOAD ==>
+      @     statoErrore == \old(statoErrore) &&
+      @     statoCabina == \old(statoCabina) &&
+      @     statoPorte == \old(statoPorte) &&
+      @     direzione == \old(direzione) &&
+      @     timer == \old(timer);
+      @*/
+    public void gestisciSovraccarico() {
+        if (numeroPersone > CAPACITA_MASSIMA) {
+            statoErrore = StatoErrore.OVERLOAD;
+            statoCabina = StatoCabina.BLOCCATA;
+            statoPorte = StatoPorte.APERTE;
+            direzione = Direzione.NESSUNA;
+            timer = 0;
+        } else if (statoErrore == StatoErrore.OVERLOAD) {
+            statoErrore = StatoErrore.NESSUNO;
+            statoCabina = StatoCabina.FERMA;
+            statoPorte = StatoPorte.CHIUSE;
+            direzione = Direzione.NESSUNA;
+            timer = 0;
+        }
+    }
     //@ requires statoErrore == StatoErrore.NESSUNO;
     //@ ensures statoErrore == StatoErrore.GUASTO;
     //@ ensures statoCabina == StatoCabina.BLOCCATA;
