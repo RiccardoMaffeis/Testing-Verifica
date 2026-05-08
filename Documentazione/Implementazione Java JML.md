@@ -915,3 +915,5 @@ Il codice Java non sostituisce il modello ASM completo, ma ne implementa una par
 La verifica tramite ESC/OpenJML e i test JUnit consentono di controllare sia le proprietà specificate formalmente tramite JML, sia il comportamento operativo del sistema nei principali scenari previsti.
 
 La parte Java/JML può quindi essere considerata coerente con il modello formale e adeguata come nucleo implementativo del progetto.
+
+Infine, la suite di test JUnit è stata integrata in un workflow GitHub Actions, così da automatizzare la compilazione del progetto e l’esecuzione dei test a ogni modifica del repository.
