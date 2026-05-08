@@ -25,7 +25,8 @@ La validazione, la verifica e la specifica del sistema sono state svolte tramite
 - model checking con AsmetaSMV;
 - implementazione Java annotata con JML;
 - verifica statica tramite ESC/OpenJML;
-- test JUnit sul nucleo Java.
+- test JUnit sul nucleo Java;
+- Continuous Integration tramite GitHub Actions.
 
 ---
 
@@ -56,6 +57,10 @@ La repository è organizzata nel seguente modo:
 ```text
 .
 ├── README.md
+│
+├── .github/
+│   └── workflows/
+│       └── java-ci.yml
 │
 ├── Codice/
 │   │
@@ -324,6 +329,24 @@ I test sono stati utilizzati anche per analizzare la copertura del codice tramit
 
 ---
 
+## Continuous Integration
+
+Il repository include un workflow di Continuous Integration basato su GitHub Actions:
+
+```text
+.github/workflows/java-ci.yml
+```
+
+Il workflow viene eseguito automaticamente a ogni push sui branch principali e a ogni pull_request.
+
+La pipeline configura un ambiente Java, compila i sorgenti del progetto ed esegue automaticamente la suite di test JUnit.
+
+Poiché il progetto non utilizza Maven o Gradle, la compilazione viene eseguita direttamente tramite javac.
+
+La CI non sostituisce la verifica statica svolta con OpenJML, ma controlla automaticamente che il codice Java compili correttamente e che i test JUnit continuino a passare dopo ogni modifica.
+
+---
+
 ## Verifica statica con JML e OpenJML
 
 La verifica della parte Java è stata svolta tramite contratti JML e controllo statico con ESC/OpenJML.
@@ -374,4 +397,4 @@ La successiva implementazione Java + JML realizza il nucleo logico principale de
 
 I test JUnit completano la verifica della parte implementativa, controllando il comportamento del controllore Java nei casi ordinari, nei casi anomali e nei principali casi limite.
 
-Nel complesso, il progetto integra modellazione ASM, validazione tramite AVALLA, generazione automatica di scenari con ATGT, model checking con AsmetaSMV, specifica formale del codice Java tramite JML e test automatici JUnit.
+Nel complesso, il progetto integra modellazione ASM, validazione tramite AVALLA, generazione automatica di scenari con ATGT, model checking con AsmetaSMV, specifica formale del codice Java tramite JML, test automatici JUnit e Continuous Integration tramite GitHub Actions.
