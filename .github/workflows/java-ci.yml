@@ -25,33 +25,39 @@ jobs:
         run: |
           mkdir -p lib
           mkdir -p bin
+          mkdir -p ci-stubs/org/jmlspecs/annotation
 
       - name: Download JUnit 5 Console Standalone
         run: |
           curl -L -o lib/junit-platform-console-standalone.jar \
             https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.1/junit-platform-console-standalone-1.10.1.jar
 
-      - name: Download OpenJML release
+      - name: Create temporary CodeBigintMath annotation
         run: |
-          curl -L -o openjml.zip \
-            https://github.com/OpenJML/OpenJML/releases/latest/download/openjml-ubuntu-22.04-21.zip
-          unzip openjml.zip -d openjml
+          cat > ci-stubs/org/jmlspecs/annotation/CodeBigintMath.java <<'EOF'
+          package org.jmlspecs.annotation;
 
-      - name: Find JML runtime
-        run: |
-          find openjml -name "jmlruntime.jar"
-          cp $(find openjml -name "jmlruntime.jar" | head -n 1) lib/jmlruntime.jar
+          import java.lang.annotation.ElementType;
+          import java.lang.annotation.Retention;
+          import java.lang.annotation.RetentionPolicy;
+          import java.lang.annotation.Target;
+
+          @Retention(RetentionPolicy.RUNTIME)
+          @Target({ElementType.TYPE, ElementType.METHOD, ElementType.CONSTRUCTOR})
+          public @interface CodeBigintMath {
+          }
+          EOF
 
       - name: Compile source and tests
         run: |
           javac \
-            -cp "lib/junit-platform-console-standalone.jar:lib/jmlruntime.jar" \
+            -cp "lib/junit-platform-console-standalone.jar" \
             -d bin \
-            $(find Codice/Java/Progetto/src -name "*.java")
+            $(find ci-stubs Codice/Java/Progetto/src -name "*.java")
 
       - name: Run JUnit tests
         run: |
           java \
             -jar lib/junit-platform-console-standalone.jar \
-            --class-path "bin:lib/jmlruntime.jar" \
+            --class-path bin \
             --scan-class-path
