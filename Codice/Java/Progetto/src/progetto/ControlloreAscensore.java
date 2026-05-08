@@ -6,7 +6,7 @@ public class ControlloreAscensore {
 
     public ControlloreAscensore(Ascensore ascensore) {
         if (ascensore == null) {
-            throw new IllegalArgumentException("Ascensore non può essere null");
+            throw new IllegalArgumentException("Ascensore non puo essere null");
         }
 
         this.ascensore = ascensore;
@@ -18,7 +18,7 @@ public class ControlloreAscensore {
 
     public void eseguiPasso(InputAscensore input) {
         if (input == null) {
-            throw new IllegalArgumentException("InputAscensore non può essere null");
+            throw new IllegalArgumentException("InputAscensore non puo essere null");
         }
 
         acquisisciRichieste(input);

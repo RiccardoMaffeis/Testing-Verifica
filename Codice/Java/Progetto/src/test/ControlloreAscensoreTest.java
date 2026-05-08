@@ -91,7 +91,7 @@ public class ControlloreAscensoreTest {
                 () -> new ControlloreAscensore(null)
         );
 
-        assertEquals("Ascensore non può essere null", eccezione.getMessage());
+        assertEquals("Ascensore non puo essere null", eccezione.getMessage());
     }
 
     @Test
@@ -104,7 +104,7 @@ public class ControlloreAscensoreTest {
                 () -> controllore.eseguiPasso(null)
         );
 
-        assertEquals("InputAscensore non può essere null", eccezione.getMessage());
+        assertEquals("InputAscensore non puo essere null", eccezione.getMessage());
     }
 
     @Test
