@@ -4,15 +4,17 @@
 
 Questo repository contiene il modello ASM di un sistema di ascensore a più piani con un'unica cabina e una successiva implementazione Java annotata con specifiche JML.
 
-Il progetto comprende quindi sia la modellazione formale astratta del sistema, sia una versione implementativa del nucleo logico dell’ascensore, utilizzata per la specifica e la verifica tramite contratti JML.
+Il progetto comprende quindi sia la modellazione formale astratta del sistema, sia una versione implementativa del nucleo logico dell'ascensore, utilizzata per la specifica e la verifica tramite contratti JML e test JUnit.
 
 ---
 
 ## Obiettivo
 
-L'obiettivo del progetto è modellare formalmente un ascensore mediante Abstract State Machines, verificarne il comportamento tramite strumenti dell'ambiente ASMETA e realizzare una versione Java del nucleo logico annotata con specifiche JML.
+L'obiettivo del progetto è modellare formalmente un ascensore mediante Abstract State Machines, verificarne il comportamento tramite gli strumenti dell'ambiente ASMETA e realizzare una versione Java del nucleo logico annotata con specifiche JML.
 
-La parte ASM viene utilizzata per descrivere il comportamento astratto del sistema e per validarlo tramite scenari e proprietà temporali. La parte Java + JML consente invece di ottenere una versione eseguibile del nucleo logico, specificando formalmente invarianti, precondizioni e postcondizioni dei principali metodi.
+La parte ASM descrive il comportamento astratto del sistema e viene validata tramite scenari AVALLA, scenari generati automaticamente con ATGT e proprietà temporali verificate con AsmetaSMV.
+
+La parte Java + JML fornisce invece una versione eseguibile del nucleo logico, specificando formalmente invarianti, precondizioni e postcondizioni dei principali metodi. A questa si aggiungono test JUnit per verificare il comportamento operativo del controllore.
 
 Il sistema rappresenta una cabina che serve più piani dell'edificio, gestendo richieste, movimento, porte, sovraccarico e guasti.
 
@@ -22,17 +24,19 @@ La validazione, la verifica e la specifica del sistema sono state svolte tramite
 - scenari generati automaticamente con ATGT;
 - model checking con AsmetaSMV;
 - implementazione Java annotata con JML;
-- verifica statica tramite ESC/OpenJML.
+- verifica statica tramite ESC/OpenJML;
+- test JUnit sul nucleo Java.
 
 ---
 
 ## Funzionalità principali
 
-Il modello gestisce:
+Il sistema gestisce:
 
 - richieste interne dalla cabina;
 - chiamate esterne dai piani;
 - memorizzazione delle richieste attive;
+- scelta della direzione di movimento;
 - movimento sicuro solo con porte chiuse;
 - apertura delle porte al piano richiesto;
 - stato di inattività in assenza di richieste;
@@ -51,7 +55,10 @@ La repository è organizzata nel seguente modo:
 
 ```text
 .
+├── README.md
+│
 ├── Codice/
+│   │
 │   ├── AsmetaL/
 │   │   ├── CTLLibrary.asm
 │   │   ├── StandardLibrary.asm
@@ -59,42 +66,49 @@ La repository è organizzata nel seguente modo:
 │   │   ├── ascensore_smv_small.asm
 │   │   └── ascensore_smv_small.smv
 │   │
-│   └── Avalla/
-│       ├── ATGT/
-│       │   ├── testtest0.avalla
-│       │   ├── testtest2.avalla
-│       │   ├── testtest4.avalla
-│       │   ├── testtest6.avalla
-│       │   └── testtest8.avalla
-│       ├── scenario_blocco_richieste_durante_guasto.avalla
-│       ├── scenario_conservazione_richieste_guasto.avalla
-│       ├── scenario_guasto.avalla
-│       ├── scenario_idle.avalla
-│       ├── scenario_overload.avalla
-│       ├── scenario_richiesta_piano_inferiore.avalla
-│       ├── scenario_richiesta_piano_superiore.avalla
-│       ├── scenario_richieste_durante_overload.avalla
-│       ├── scenario_ripristino_guasto.avalla
-│       └── scenario_risoluzione_overload.avalla
+│   ├── Avalla/
+│   │   │
+│   │   ├── ATGT/
+│   │   │   ├── testtest0.avalla
+│   │   │   ├── testtest2.avalla
+│   │   │   ├── testtest4.avalla
+│   │   │   ├── testtest6.avalla
+│   │   │   └── testtest8.avalla
+│   │   │
+│   │   ├── scenario_idle.avalla
+│   │   ├── scenario_richiesta_piano_superiore.avalla
+│   │   ├── scenario_richiesta_piano_inferiore.avalla
+│   │   ├── scenario_overload.avalla
+│   │   ├── scenario_risoluzione_overload.avalla
+│   │   ├── scenario_richieste_durante_overload.avalla
+│   │   ├── scenario_guasto.avalla
+│   │   ├── scenario_blocco_richieste_durante_guasto.avalla
+│   │   ├── scenario_conservazione_richieste_guasto.avalla
+│   │   └── scenario_ripristino_guasto.avalla
+│   │
+│   └── Java/
+│       └── Progetto/
+│           │
+│           └── src/
+│               │
+│               ├── progetto/
+│               │   ├── Ascensore.java
+│               │   ├── ControlloreAscensore.java
+│               │   ├── InputAscensore.java
+│               │   ├── Direzione.java
+│               │   ├── StatoCabina.java
+│               │   ├── StatoPorte.java
+│               │   └── StatoErrore.java
+│               │
+│               └── test/
+│                   └── ControlloreAscensoreTest.java
 │
-├── Java/
-│   └── Progetto/
-│       └── src/
-│           └── progetto/
-│               ├── Ascensore.java
-│               ├── Direzione.java
-│               ├── StatoCabina.java
-│               ├── StatoPorte.java
-│               └── StatoErrore.java
-│
-├── Documentazione/
-│   ├── AVALLA, ATGT and AsmetaSMV Validation Report.md
-│   ├── AVALLA, ATGT and AsmetaSMV Validation Report.pdf
-│   ├── Implementazione Java JML.md
-│   ├── Implementazione Java JML.pdf
-│   └── Requisiti e Proprieta.pdf
-│
-└── README.md
+└── Documentazione/
+    ├── Requisiti e Proprieta.pdf
+    ├── AVALLA, ATGT and AsmetaSMV Validation Report.md
+    ├── AVALLA, ATGT and AsmetaSMV Validation Report.pdf
+    ├── Implementazione Java JML.md
+    └── Implementazione Java JML.pdf
 ```
 
 ---
@@ -123,6 +137,21 @@ Questo modello completo è utilizzato per la validazione tramite scenari AVALLA 
 
 ---
 
+## Scenari AVALLA e ATGT
+
+Gli scenari `.avalla` servono per validare il comportamento del modello ASM.
+
+Nel progetto sono presenti due gruppi di scenari:
+
+- scenari AVALLA manuali;
+- scenari AVALLA generati automaticamente tramite ATGT.
+
+Gli scenari manuali verificano situazioni specifiche e significative del sistema, come il movimento della cabina, il servizio di un piano richiesto, il sovraccarico e il guasto.
+
+Gli scenari generati con ATGT sono utilizzati come supporto alla validazione manuale, per esplorare automaticamente ulteriori configurazioni raggiungibili del modello.
+
+---
+
 ## Comportamento in caso di sovraccarico
 
 Quando il numero di persone presenti in cabina supera la capacità massima, il sistema entra nello stato `OVERLOAD`.
@@ -132,7 +161,8 @@ In questo stato:
 - la cabina viene bloccata;
 - le porte restano aperte;
 - la direzione viene impostata a `NESSUNA`;
-- il sistema continua ad acquisire nuove richieste.
+- il sistema continua ad acquisire nuove richieste;
+- le richieste già acquisite vengono conservate.
 
 Quando il numero di persone torna entro la capacità massima, il sistema esce dallo stato `OVERLOAD` e torna operativo.
 
@@ -155,41 +185,24 @@ Quando il timer raggiunge `0`, il sistema torna allo stato operativo.
 
 ---
 
-## Scenari AVALLA e ATGT
-
-Gli scenari `.avalla` servono per validare il comportamento del modello ASM.
-
-Nel progetto sono presenti due gruppi di scenari:
-
-- scenari AVALLA manuali;
-- scenari AVALLA generati automaticamente tramite ATGT.
-
-Gli scenari manuali sono stati scritti per verificare situazioni specifiche e significative del sistema, come il movimento della cabina, il servizio di un piano richiesto, il sovraccarico e il guasto.
-
-Gli scenari generati con ATGT sono stati invece utilizzati come supporto alla validazione manuale, per esplorare automaticamente ulteriori configurazioni raggiungibili del modello.
-
----
-
 ## Model checking con AsmetaSMV
 
 Oltre alla validazione tramite AVALLA e ATGT, il progetto include una verifica tramite model checking con AsmetaSMV.
 
-Per questa attività è stata utilizzata la versione ridotta:
+Per questa attività è stata utilizzata una versione ridotta del modello:
 
 ```text
 Codice/AsmetaL/ascensore_smv_small.asm
 ```
 
-La versione ridotta mantiene la logica essenziale del sistema, cioè:
+La versione ridotta mantiene la logica essenziale del sistema:
 
 - acquisizione delle richieste;
 - movimento della cabina;
 - apertura e chiusura delle porte;
 - gestione dello stato di guasto.
 
-Rispetto al modello completo, sono stati limitati il numero di piani e sono state rimosse alcune estensioni, come la gestione del sovraccarico e del numero di persone.
-
-Questa riduzione è stata necessaria per contenere lo spazio degli stati generato dal model checker.
+Rispetto al modello completo, sono stati limitati il numero di piani e il dominio del timer. Inoltre, sono state rimosse alcune estensioni, come la gestione del sovraccarico e del numero di persone, per contenere lo spazio degli stati generato dal model checker.
 
 Il model checking è stato usato per verificare proprietà CTL relative a:
 
@@ -209,6 +222,12 @@ Le proprietà verificate controllano, in particolare, che:
 - siano raggiungibili movimenti verso l'alto e verso il basso;
 - lo stato di guasto sia effettivamente raggiungibile.
 
+Il file NuSMV generato è:
+
+```text
+Codice/AsmetaL/ascensore_smv_small.smv
+```
+
 ---
 
 ## Implementazione Java + JML
@@ -218,7 +237,7 @@ Oltre al modello ASM, il progetto contiene una versione Java del nucleo logico d
 Il file principale è:
 
 ```text
-Java/Progetto/src/progetto/Ascensore.java
+Codice/Java/Progetto/src/progetto/Ascensore.java
 ```
 
 La classe `Ascensore` implementa le principali funzionalità del sistema modellato in ASM, tra cui:
@@ -242,9 +261,66 @@ La classe è annotata tramite JML per specificare formalmente:
 - proprietà sui cicli;
 - metodi `pure` di osservazione dello stato.
 
-Gli attributi principali della classe sono dichiarati `private` per proteggere lo stato interno dell’oggetto. L’annotazione JML `spec_public` viene utilizzata per permettere comunque l’uso di tali campi all’interno delle specifiche pubbliche.
+Gli attributi principali della classe sono dichiarati `private` per proteggere lo stato interno dell'oggetto. L'annotazione JML `spec_public` permette comunque di usare tali campi all'interno delle specifiche pubbliche.
 
 La parte Java + JML non sostituisce il modello ASM, ma rappresenta una realizzazione eseguibile e verificabile del nucleo logico del sistema.
+
+---
+
+## Controllore Java
+
+La classe:
+
+```text
+Codice/Java/Progetto/src/progetto/ControlloreAscensore.java
+```
+
+coordina l'esecuzione di un passo logico del sistema.
+
+A ogni passo il controllore:
+
+- acquisisce eventuali richieste dall'input;
+- aggiorna il numero di persone quando le porte sono aperte;
+- gestisce sovraccarico e guasto;
+- chiude le porte quando necessario;
+- serve il piano corrente se è presente una richiesta;
+- mette l'ascensore in attesa se non ci sono richieste;
+- sceglie la direzione e muove la cabina se esistono richieste pendenti.
+
+Gli input esterni sono rappresentati dalla classe:
+
+```text
+Codice/Java/Progetto/src/progetto/InputAscensore.java
+```
+
+---
+
+## Test JUnit
+
+Il progetto contiene una suite di test JUnit relativa all'implementazione Java:
+
+```text
+Codice/Java/Progetto/src/test/ControlloreAscensoreTest.java
+```
+
+I test verificano:
+
+- lo stato iniziale dell'ascensore;
+- il comportamento in assenza di richieste;
+- l'acquisizione di richieste interne ed esterne;
+- il movimento verso piani superiori e inferiori;
+- il servizio del piano richiesto;
+- la chiusura delle porte dopo il servizio;
+- la gestione del sovraccarico;
+- la risoluzione del sovraccarico;
+- il comportamento durante il guasto;
+- il blocco delle nuove richieste durante il guasto;
+- la conservazione delle richieste già acquisite;
+- il decremento del timer di guasto;
+- il ripristino dopo il guasto;
+- casi limite e input non validi.
+
+I test sono stati utilizzati anche per analizzare la copertura del codice tramite EclEmma.
 
 ---
 
@@ -275,11 +351,11 @@ Alcuni metodi con logica decisionale più articolata possono richiedere ulterior
 Il risultato completo della modellazione, validazione, verifica e implementazione è documentato nei file:
 
 ```text
+Documentazione/Requisiti e Proprieta.pdf
 Documentazione/AVALLA, ATGT and AsmetaSMV Validation Report.md
 Documentazione/AVALLA, ATGT and AsmetaSMV Validation Report.pdf
 Documentazione/Implementazione Java JML.md
 Documentazione/Implementazione Java JML.pdf
-Documentazione/Requisiti e Proprieta.pdf
 ```
 
 ---
@@ -296,6 +372,6 @@ Il model checking con AsmetaSMV permette di verificare formalmente proprietà CT
 
 La successiva implementazione Java + JML realizza il nucleo logico principale del sistema in una forma eseguibile. Le specifiche JML permettono di formalizzare e controllare proprietà di sicurezza e coerenza dello stato, come la validità del piano corrente, la gestione degli errori, il movimento solo con porte chiuse e la corretta gestione delle richieste.
 
-Nel complesso, il progetto integra modellazione ASM, validazione tramite AVALLA, generazione automatica di scenari con ATGT, model checking con AsmetaSMV e specifica formale del codice Java tramite JML.
-```
-```
+I test JUnit completano la verifica della parte implementativa, controllando il comportamento del controllore Java nei casi ordinari, nei casi anomali e nei principali casi limite.
+
+Nel complesso, il progetto integra modellazione ASM, validazione tramite AVALLA, generazione automatica di scenari con ATGT, model checking con AsmetaSMV, specifica formale del codice Java tramite JML e test automatici JUnit.
