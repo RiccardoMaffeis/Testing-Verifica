@@ -4,18 +4,19 @@
 
 Questa documentazione descrive l’implementazione Java del nucleo logico del sistema ascensore modellato precedentemente mediante ASM.
 
-L’obiettivo dell’implementazione Java non è quello di sostituire il modello ASM, ma di realizzare una versione eseguibile e verificabile del comportamento 
-principale dell’ascensore. La classe `Ascensore` rappresenta quindi il nucleo operativo del sistema e viene annotata mediante JML per specificare formalmente proprietà, 
-vincoli e contratti dei metodi principali.
+L’obiettivo dell’implementazione Java non è quello di sostituire il modello ASM, ma di realizzare una versione eseguibile e verificabile del comportamento principale dell’ascensore. La classe `Ascensore` rappresenta il nucleo operativo del sistema ed è annotata mediante JML per specificare formalmente proprietà, vincoli e contratti dei metodi principali.
+
+Alla classe `Ascensore` si affiancano la classe `InputAscensore`, usata per rappresentare gli input esterni, e la classe `ControlloreAscensore`, che coordina l’evoluzione del sistema a ogni passo logico.
+
+La verifica dell’implementazione è stata svolta tramite specifiche JML, ESC/OpenJML e test JUnit.
 
 ---
 
 ## 2. Differenze rispetto al modello ASM
 
-Il modello ASM descrive il comportamento dell’ascensore come una macchina astratta a stati. In ASM il sistema è definito tramite domini, funzioni `monitored`, 
-funzioni `controlled` e regole di transizione.
+Il modello ASM descrive il comportamento dell’ascensore come una macchina astratta a stati. In ASM il sistema è definito tramite domini, funzioni `monitored`, funzioni `controlled` e regole di transizione.
 
-L’implementazione Java, invece, organizza la logica del sistema in metodi separati. Ogni metodo rappresenta una parte del comportamento del modello ASM.
+L’implementazione Java organizza invece la logica del sistema in classi e metodi. Ogni metodo rappresenta una parte del comportamento definito nel modello ASM.
 
 Nel modello ASM gli input esterni erano rappresentati da funzioni monitorate:
 
@@ -28,20 +29,28 @@ monitored personeEntrate: Integer
 monitored personeUscite: Integer
 ```
 
-Nel codice Java questi input sono rappresentati da chiamate di metodo:
+Nel codice Java questi input sono raccolti nella classe `InputAscensore` e poi interpretati dal `ControlloreAscensore`.
+
+Ad esempio, una richiesta o un evento vengono impostati sull’oggetto di input:
 
 ```java
-aggiungiRichiestaInterna(piano);
-aggiungiChiamataSalita(piano);
-aggiungiChiamataDiscesa(piano);
-attivaGuasto();
-aggiornaPersone(personeEntrate, personeUscite);
+input.setRichiestaInterna(piano);
+input.setChiamataSalita(piano);
+input.setChiamataDiscesa(piano);
+input.setEventoGuasto(true);
+input.setPersoneEntrate(valore);
+input.setPersoneUscite(valore);
 ```
 
-Inoltre, mentre il modello ASM contiene una regola principale che coordina l’intero comportamento del sistema, 
-nella versione Java i singoli comportamenti sono separati in metodi indipendenti. Questa scelta rende più semplice la specifica JML e la verifica tramite ESC.
+Il controllore usa poi tali informazioni per invocare i metodi della classe `Ascensore`.
 
-L’implementazione Java rappresenta quindi una realizzazione eseguibile del nucleo logico del modello ASM, mantenendone i comportamenti principali ma organizzandoli in forma orientata agli oggetti.
+Inoltre, mentre nel modello ASM il comportamento complessivo è coordinato da una regola principale, nella versione Java tale ruolo è svolto dal metodo:
+
+```java
+eseguiPasso(InputAscensore input)
+```
+
+della classe `ControlloreAscensore`.
 
 ---
 
@@ -53,18 +62,36 @@ Il codice è organizzato nel package:
 package progetto;
 ```
 
-La struttura principale prevista è la seguente:
+La struttura della parte Java è la seguente:
 
 ```text
-src/progetto/
-├── Ascensore.java
-├── Direzione.java
-├── StatoCabina.java
-├── StatoPorte.java
-└── StatoErrore.java
+src/
+├── progetto/
+│   ├── Ascensore.java
+│   ├── ControlloreAscensore.java
+│   ├── InputAscensore.java
+│   ├── Direzione.java
+│   ├── StatoCabina.java
+│   ├── StatoPorte.java
+│   └── StatoErrore.java
+│
+└── test/
+    └── ControlloreAscensoreTest.java
 ```
 
-La classe principale è `Ascensore.java`, affiancata dalle enumerazioni `Direzione`, `StatoCabina`, `StatoPorte` e `StatoErrore`.
+Le classi principali sono:
+
+- `Ascensore`, che contiene lo stato interno e i metodi fondamentali dell’ascensore;
+- `InputAscensore`, che rappresenta gli input esterni ricevuti in un passo logico;
+- `ControlloreAscensore`, che coordina l’evoluzione del sistema;
+- `ControlloreAscensoreTest`, che contiene i test JUnit.
+
+Le enumerazioni utilizzate sono:
+
+- `Direzione`;
+- `StatoCabina`;
+- `StatoPorte`;
+- `StatoErrore`.
 
 ---
 
@@ -119,7 +146,52 @@ consente comunque di usare questi campi nelle specifiche JML pubbliche.
 
 ---
 
-## 5. Rappresentazione delle richieste attive
+## 5. Enumerazioni
+
+Le enumerazioni definiscono gli stati discreti principali del sistema.
+
+```java
+public enum Direzione {
+    SU,
+    GIU,
+    NESSUNA
+}
+```
+
+`Direzione` indica la direzione corrente dell’ascensore.
+
+```java
+public enum StatoCabina {
+    FERMA,
+    IN_MOVIMENTO,
+    BLOCCATA
+}
+```
+
+`StatoCabina` indica se la cabina è ferma, in movimento oppure bloccata.
+
+```java
+public enum StatoPorte {
+    APERTE,
+    CHIUSE
+}
+```
+
+`StatoPorte` indica lo stato delle porte.
+
+```java
+public enum StatoErrore {
+    NESSUNO,
+    OVERLOAD,
+    GUASTO
+}
+```
+
+`StatoErrore` indica se il sistema è operativo, in sovraccarico oppure in guasto tecnico.
+
+---
+
+## 6. Rappresentazione delle richieste attive
 
 Nel modello ASM le richieste erano rappresentate come funzione:
 
@@ -133,6 +205,14 @@ Nel codice Java sono rappresentate tramite un array:
 private final boolean[] richiesteAttive;
 ```
 
+Poiché in Java gli array partono da indice `0`, mentre i piani dell’ascensore vanno da `-1` a `4`, viene utilizzato il metodo:
+
+```java
+indiceDelPiano(int piano)
+```
+
+Il metodo converte il numero del piano nell’indice dell’array.
+
 Il contratto JML del metodo è:
 
 ```java
@@ -145,13 +225,11 @@ Questo garantisce che ogni piano valido venga convertito in un indice valido del
 
 ---
 
-## 6. Invarianti JML della classe
+## 7. Invarianti JML della classe Ascensore
 
 La classe `Ascensore` definisce diversi invarianti JML. Gli invarianti rappresentano proprietà che devono essere sempre vere per ogni oggetto valido della classe.
 
----
-
-### 6.1 Vincoli sullo stato numerico
+### 7.1 Vincoli sullo stato numerico
 
 ```java
 //@ public invariant PIANO_MINIMO <= pianoCorrente && pianoCorrente <= PIANO_MASSIMO;
@@ -165,9 +243,7 @@ Questi invarianti garantiscono che:
 - il timer sia sempre compreso tra `0` e `TIMER_MASSIMO`;
 - il numero di persone non sia mai negativo.
 
----
-
-### 6.2 Vincoli di non nullità
+### 7.2 Vincoli di non nullità
 
 ```java
 //@ public invariant statoCabina != null;
@@ -180,9 +256,7 @@ Questi invarianti garantiscono che:
 
 Questi invarianti garantiscono che gli stati dell’ascensore siano sempre definiti e che l’array delle richieste sia correttamente inizializzato.
 
----
-
-### 6.3 Invarianti di sicurezza sul movimento
+### 7.3 Invarianti di sicurezza sul movimento
 
 ```java
 //@ public invariant statoCabina == StatoCabina.IN_MOVIMENTO ==> statoPorte == StatoPorte.CHIUSE;
@@ -194,9 +268,7 @@ Questi invarianti formalizzano due proprietà fondamentali:
 - la cabina può muoversi solo con le porte chiuse;
 - la cabina può muoversi solo se non sono presenti errori.
 
----
-
-### 6.4 Invarianti sul guasto
+### 7.4 Invarianti sul guasto
 
 ```java
 //@ public invariant statoErrore == StatoErrore.GUASTO ==> statoCabina == StatoCabina.BLOCCATA;
@@ -206,9 +278,7 @@ Questi invarianti formalizzano due proprietà fondamentali:
 
 Quando il sistema è in stato `GUASTO`, la cabina deve essere bloccata, le porte devono essere chiuse e la direzione deve essere annullata.
 
----
-
-### 6.5 Invarianti sul sovraccarico
+### 7.5 Invarianti sul sovraccarico
 
 ```java
 //@ public invariant statoErrore == StatoErrore.OVERLOAD ==> statoCabina == StatoCabina.BLOCCATA;
@@ -218,9 +288,7 @@ Quando il sistema è in stato `GUASTO`, la cabina deve essere bloccata, le porte
 
 Quando il sistema è in stato `OVERLOAD`, la cabina deve essere bloccata, le porte devono essere aperte e la direzione deve essere annullata.
 
----
-
-### 6.6 Invariante sul timer
+### 7.6 Invariante sul timer
 
 ```java
 //@ public invariant timer > 0 ==> statoErrore == StatoErrore.GUASTO;
@@ -230,7 +298,7 @@ Questo invariante stabilisce che il timer può essere positivo solo durante uno 
 
 ---
 
-## 7. Costruttore
+## 8. Costruttore
 
 Il costruttore inizializza l’ascensore nello stato iniziale:
 
@@ -267,7 +335,7 @@ Le postcondizioni JML garantiscono che l’oggetto venga creato in uno stato coe
 
 ---
 
-## 8. Metodi di osservazione
+## 9. Metodi di osservazione
 
 La classe contiene diversi metodi `pure`, utilizzati per leggere lo stato senza modificarlo.
 
@@ -287,7 +355,7 @@ In JML, un metodo dichiarato `pure` non modifica lo stato dell’oggetto e può 
 
 ---
 
-## 9. Gestione delle richieste
+## 10. Gestione delle richieste
 
 La classe permette di aggiungere tre tipi di richieste:
 
@@ -316,11 +384,9 @@ public void aggiungiRichiestaInterna(int piano)
 
 In stato `GUASTO`, quindi, non vengono acquisite nuove richieste.
 
-Questa scelta è coerente con il modello ASM, nel quale durante il guasto il sistema sospende l’acquisizione di nuove richieste.
-
 ---
 
-## 10. Aggiornamento del numero di persone
+## 11. Aggiornamento del numero di persone
 
 Il metodo:
 
@@ -357,7 +423,7 @@ Questa annotazione viene usata per evitare falsi allarmi legati all’overflow d
 
 ---
 
-## 11. Gestione del sovraccarico
+## 12. Gestione del sovraccarico
 
 Il metodo:
 
@@ -391,7 +457,7 @@ Questo comportamento è coerente con il modello ASM, nel quale il sovraccarico b
 
 ---
 
-## 12. Gestione del guasto
+## 13. Gestione del guasto
 
 Il metodo:
 
@@ -421,7 +487,7 @@ Questo è coerente con il modello ASM, nel quale il guasto blocca la cabina, chi
 
 ---
 
-## 13. Gestione del timer di guasto
+## 14. Gestione del timer di guasto
 
 Il metodo:
 
@@ -451,7 +517,7 @@ Il contratto JML descrive formalmente entrambi i casi.
 
 ---
 
-## 14. Gestione delle porte
+## 15. Gestione delle porte
 
 Il metodo:
 
@@ -473,7 +539,7 @@ Quindi le porte vengono chiuse solo se il sistema è operativo, la cabina è fer
 
 ---
 
-## 15. Servizio del piano corrente
+## 16. Servizio del piano corrente
 
 Il metodo:
 
@@ -496,7 +562,7 @@ Il metodo rappresenta il momento in cui l’ascensore arriva al piano richiesto,
 
 ---
 
-## 16. Stato di attesa
+## 17. Stato di attesa
 
 Il metodo:
 
@@ -523,7 +589,7 @@ Questo metodo rappresenta il comportamento dell’ascensore quando non ci sono r
 
 ---
 
-## 17. Ricerca delle richieste
+## 18. Ricerca delle richieste
 
 La classe contiene tre metodi per analizzare le richieste attive:
 
@@ -535,9 +601,7 @@ esisteRichiestaSotto()
 
 Questi metodi sono dichiarati `pure`, perché leggono lo stato ma non lo modificano.
 
----
-
-### 17.1 esisteRichiesta
+### 18.1 esisteRichiesta
 
 Il metodo:
 
@@ -560,9 +624,7 @@ Il ciclo è annotato con invarianti di ciclo:
 //@ loop_invariant (\forall int j; 0 <= j && j < i; richiesteAttive[j] == false);
 ```
 
----
-
-### 17.2 esisteRichiestaSopra
+### 18.2 esisteRichiestaSopra
 
 Il metodo:
 
@@ -580,9 +642,7 @@ La postcondizione JML è:
 //@         richiesteAttive[indiceDelPiano(p)]);
 ```
 
----
-
-### 17.3 esisteRichiestaSotto
+### 18.3 esisteRichiestaSotto
 
 Il metodo:
 
@@ -602,7 +662,7 @@ La postcondizione JML è:
 
 ---
 
-## 18. Scelta della direzione
+## 19. Scelta della direzione
 
 Il metodo:
 
@@ -629,14 +689,13 @@ La logica implementata è la seguente:
 
 Questo metodo è il più articolato dal punto di vista logico, perché contiene più condizioni ramificate e dipende dai metodi ausiliari di ricerca delle richieste.
 
-Durante la verifica ESC, questo metodo può risultare più difficile da dimostrare completamente, 
-soprattutto a causa dell’uso di metodi `pure` all’interno di postcondizioni con `\old`.
+Durante la verifica ESC, questo metodo può risultare più difficile da dimostrare completamente, soprattutto a causa dell’uso di metodi `pure` all’interno di postcondizioni con `\old`.
 
 Questo non indica necessariamente un errore nel comportamento, ma rappresenta un limite pratico della verifica automatica.
 
 ---
 
-## 19. Movimento della cabina
+## 20. Movimento della cabina
 
 Il metodo:
 
@@ -673,7 +732,122 @@ Se non è possibile muoversi, la cabina viene fermata e la direzione viene annul
 
 ---
 
-## 20. Verifica tramite ESC/OpenJML
+## 21. Classe InputAscensore
+
+La classe `InputAscensore` rappresenta gli input esterni ricevuti dal sistema durante un singolo passo logico.
+
+La classe contiene i seguenti attributi principali:
+
+```java
+private int richiestaInterna = Integer.MIN_VALUE;
+private int chiamataSalita = Integer.MIN_VALUE;
+private int chiamataDiscesa = Integer.MIN_VALUE;
+
+private boolean eventoGuasto;
+private int personeEntrate;
+private int personeUscite;
+```
+
+I valori relativi alle richieste sono inizializzati a `Integer.MIN_VALUE`. Tale valore viene usato come valore sentinella per indicare che, in quel passo logico, non è stata impostata alcuna richiesta di quel tipo.
+
+La classe fornisce metodi di lettura e scrittura per ciascun input:
+
+```java
+setRichiestaInterna(int richiestaInterna)
+setChiamataSalita(int chiamataSalita)
+setChiamataDiscesa(int chiamataDiscesa)
+setEventoGuasto(boolean eventoGuasto)
+setPersoneEntrate(int personeEntrate)
+setPersoneUscite(int personeUscite)
+```
+
+Sono inoltre presenti metodi di supporto che permettono di verificare se una richiesta è effettivamente presente:
+
+```java
+haRichiestaInterna()
+haChiamataSalita()
+haChiamataDiscesa()
+```
+
+Questi metodi restituiscono `true` quando il valore corrispondente è diverso da `Integer.MIN_VALUE`.
+
+La classe `InputAscensore` non modifica direttamente lo stato dell’ascensore. Il suo compito è raccogliere gli input esterni, che vengono poi interpretati dalla classe `ControlloreAscensore`.
+
+---
+
+## 22. Classe ControlloreAscensore
+
+La classe `ControlloreAscensore` ha il compito di coordinare l’evoluzione del sistema a ogni passo logico. Mentre la classe `Ascensore` contiene lo stato interno e i metodi che modificano tale stato, il controllore stabilisce l’ordine con cui questi metodi devono essere invocati.
+
+Questa separazione permette di mantenere distinta la rappresentazione dello stato dalla logica di coordinamento, rendendo il codice più leggibile e più vicino alla struttura del modello ASM, nel quale una regola principale coordina l’esecuzione delle singole regole.
+
+Il metodo principale della classe è:
+
+```java
+public void eseguiPasso(InputAscensore input)
+```
+
+Questo metodo riceve un oggetto `InputAscensore`, che rappresenta gli input esterni del sistema nel passo corrente. Se l’input è `null`, viene sollevata un’eccezione per evitare l’esecuzione del controllore con dati non validi.
+
+A ogni passo logico, il controllore esegue quattro operazioni principali:
+
+```java
+acquisisciRichieste(input);
+gestisciPersone(input);
+gestisciErrore(input);
+gestisciComportamentoNormale();
+```
+
+La prima fase acquisisce eventuali richieste interne o chiamate esterne, purché il sistema non sia in stato di guasto e i piani indicati siano validi.
+
+La seconda fase aggiorna il numero di persone presenti in cabina, ma solo quando le porte sono aperte e i valori ricevuti sono non negativi.
+
+La terza fase gestisce le condizioni anomale, dando priorità al sovraccarico rispetto al guasto. Se il sistema è in guasto, viene invece aggiornato il timer di ripristino.
+
+La quarta fase descrive il comportamento ordinario dell’ascensore: chiusura delle porte, servizio del piano corrente, stato di attesa oppure scelta della direzione e movimento di un piano.
+
+In questo modo `ControlloreAscensore` svolge un ruolo simile alla regola principale del modello ASM, perché coordina le varie operazioni elementari e determina l’evoluzione complessiva del sistema.
+
+---
+
+## 23. Test JUnit
+
+Oltre alla verifica statica tramite JML/OpenJML, il progetto include una suite di test JUnit per verificare il comportamento eseguibile della parte Java.
+
+La classe di test è:
+
+```java
+ControlloreAscensoreTest
+```
+
+La suite verifica, tra gli altri, i seguenti aspetti:
+
+- stato iniziale dell’ascensore;
+- comportamento in assenza di richieste;
+- acquisizione di richieste interne;
+- acquisizione di chiamate esterne verso l’alto e verso il basso;
+- rifiuto di richieste non valide;
+- movimento verso piani superiori e inferiori;
+- servizio del piano corrente;
+- apertura e chiusura delle porte;
+- aggiornamento del numero di persone;
+- rifiuto di valori negativi per persone entrate o uscite;
+- ingresso e risoluzione dello stato di sovraccarico;
+- acquisizione di richieste durante lo stato `OVERLOAD`;
+- ingresso nello stato di guasto;
+- blocco di nuove richieste durante lo stato `GUASTO`;
+- conservazione delle richieste già acquisite durante il guasto;
+- decremento del timer di guasto;
+- ripristino dopo il guasto;
+- casi limite della scelta della direzione;
+- casi limite del movimento ai piani estremi;
+- gestione di input `null`.
+
+I test sono stati eseguiti in ambiente Eclipse tramite JUnit. La copertura del codice è stata analizzata tramite EclEmma.
+
+---
+
+## 24. Verifica tramite ESC/OpenJML
 
 La verifica statica è stata eseguita mediante ESC di OpenJML.
 
@@ -687,11 +861,15 @@ L’obiettivo della verifica è controllare che i metodi della classe rispettino
 
 La verifica ha permesso di controllare la coerenza del codice rispetto alle proprietà dichiarate.
 
+Alcuni metodi con logica decisionale più articolata, come `scegliDirezione`, possono risultare più difficili da dimostrare completamente tramite verifica automatica. Questo non indica necessariamente un errore nel comportamento, ma rappresenta un limite pratico della verifica statica.
+
+Per questo motivo, la verifica statica tramite JML è stata affiancata da test JUnit sul comportamento eseguibile.
+
 ---
 
-## 21. Confronto con i requisiti del sistema
+## 25. Confronto con i requisiti del sistema
 
-La classe `Ascensore` soddisfa i principali requisiti funzionali del sistema:
+La classe `Ascensore` e le classi di supporto soddisfano i principali requisiti funzionali del sistema:
 
 | Requisito                       | Implementazione                                  |
 | ------------------------------- | ------------------------------------------------ |
@@ -708,12 +886,17 @@ La classe `Ascensore` soddisfa i principali requisiti funzionali del sistema:
 | Gestione sovraccarico           | `gestisciSovraccarico`                           |
 | Gestione guasto                 | `attivaGuasto`                                   |
 | Ripristino da guasto            | `gestisciTimerGuasto`                            |
+| Input esterni                   | `InputAscensore`                                 |
+| Coordinamento del passo logico  | `ControlloreAscensore.eseguiPasso`               |
+| Validazione tramite test        | `ControlloreAscensoreTest`                       |
 
 ---
 
-## 22. Conclusione
+## 26. Conclusione
 
-L’implementazione Java della classe `Ascensore` rappresenta il nucleo logico principale del sistema ascensore modellato in ASM.
+L’implementazione Java rappresenta il nucleo logico principale del sistema ascensore modellato in ASM.
+
+La classe `Ascensore` contiene lo stato interno del sistema e i metodi fondamentali per modificarlo. La classe `InputAscensore` raccoglie gli input esterni, mentre `ControlloreAscensore` coordina l’evoluzione del sistema a ogni passo logico.
 
 La specifica JML permette di formalizzare le principali proprietà di sicurezza e coerenza dello stato, tra cui:
 
@@ -728,5 +911,7 @@ La specifica JML permette di formalizzare le principali proprietà di sicurezza 
 - gestione corretta delle richieste attive.
 
 Il codice Java non sostituisce il modello ASM completo, ma ne implementa una parte significativa in forma eseguibile e verificabile.
+
+La verifica tramite ESC/OpenJML e i test JUnit consentono di controllare sia le proprietà specificate formalmente tramite JML, sia il comportamento operativo del sistema nei principali scenari previsti.
 
 La parte Java/JML può quindi essere considerata coerente con il modello formale e adeguata come nucleo implementativo del progetto.
