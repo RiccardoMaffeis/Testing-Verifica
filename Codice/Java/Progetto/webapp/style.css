@@ -1,0 +1,439 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 32px;
+}
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.header h1 {
+    margin: 0;
+}
+
+h2 {
+    margin-top: 28px;
+}
+
+.simulatore-panel {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
+    align-items: start;
+    margin-bottom: 28px;
+}
+
+.ascensore-box {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.ascensore-box h2 {
+    margin-top: 0;
+}
+
+.vano {
+    position: relative;
+    width: 180px;
+    height: 420px;
+    margin: 0 auto;
+    border: 3px solid #555;
+    border-radius: 10px;
+    background: linear-gradient(to top, #f0f0f0, #fcfcfc);
+    overflow: hidden;
+}
+
+.piano-riga {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    border-top: 1px dashed #cfcfcf;
+    box-sizing: border-box;
+    transition: background 0.25s;
+}
+
+.etichetta-piano {
+    position: absolute;
+    left: 8px;
+    top: 6px;
+    font-size: 12px;
+    color: #666;
+    font-weight: bold;
+}
+
+.highlight-piano {
+    background: rgba(255, 235, 59, 0.18);
+}
+
+.cabina {
+    position: absolute;
+    left: 35px;
+    width: 110px;
+    height: 56px;
+    background: #90caf9;
+    border: 2px solid #42a5f5;
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: bottom 0.7s ease-in-out, transform 0.3s ease, background 0.3s, border-color 0.3s;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+.cabina.in-movimento {
+    transform: scale(1.03);
+}
+
+.cabina.bloccata {
+    background: #ef9a9a;
+    border-color: #e57373;
+}
+
+.porte {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.porta {
+    width: 50%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.58);
+    border-right: 1px solid rgba(0, 0, 0, 0.14);
+    transition: transform 0.5s ease-in-out;
+}
+
+.porta-dx {
+    border-right: none;
+    border-left: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+.cabina.porte-aperte .porta-sx {
+    transform: translateX(-85%);
+}
+
+.cabina.porte-aperte .porta-dx {
+    transform: translateX(85%);
+}
+
+.cabina-info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 2px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: bold;
+    color: #0d47a1;
+    z-index: 2;
+}
+
+.cabina-persone {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    z-index: 1;
+    justify-content: center;
+}
+
+.mini-persona {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #1565c0;
+}
+
+.mini-persona.overload {
+    background: #b71c1c;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.card {
+    border: 1px solid #ddd;
+    background: #fafafa;
+    border-radius: 8px;
+    padding: 12px;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.value {
+    font-size: 20px;
+}
+
+.success {
+    background: #e8f5e9;
+    border-color: #a5d6a7;
+}
+
+.warning {
+    background: #fff8e1;
+    border-color: #ffcc80;
+}
+
+.danger {
+    background: #ffebee;
+    border-color: #ef9a9a;
+}
+
+.quick-controls {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+.quick-controls h2 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+}
+
+.quick-controls button {
+    margin-bottom: 6px;
+}
+
+.mode-switch {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.mode-button {
+    font-weight: bold;
+    background: #f7f7f7;
+}
+
+.mode-button.active {
+    background: #e3f2fd;
+    border-color: #90caf9;
+}
+
+.mode-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.mode-panel {
+    display: none;
+    margin-top: 16px;
+}
+
+.mode-panel > .section:first-child {
+    border-top: none;
+    padding-top: 0;
+}
+
+.mode-panel.active {
+    display: block;
+}
+
+.monitor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.monitor-card {
+    border: 1px solid #ddd;
+    background: #fafafa;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.monitor-card h2 {
+    margin-top: 0;
+    font-size: 20px;
+}
+
+.richieste-lista {
+    display: grid;
+    gap: 8px;
+}
+
+.richiesta-riga {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #e0e0e0;
+    background: white;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.richiesta-riga.attiva {
+    background: #e3f2fd;
+    border-color: #90caf9;
+}
+
+.richiesta-piano {
+    font-weight: bold;
+}
+
+.badge-richiesta {
+    font-size: 12px;
+    border-radius: 999px;
+    padding: 4px 8px;
+    background: #eee;
+    color: #555;
+}
+
+.badge-richiesta.attiva {
+    background: #1565c0;
+    color: white;
+}
+
+.eventi-lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: Consolas, monospace;
+}
+
+.eventi-lista li {
+    margin-bottom: 6px;
+    padding: 6px 8px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-left: 5px solid #bdbdbd;
+    border-radius: 6px;
+    color: #333;
+}
+
+.evento-successo {
+    border-left-color: #2e7d32 !important;
+}
+
+.evento-info {
+    border-left-color: #1565c0 !important;
+}
+
+.evento-warning {
+    border-left-color: #ef6c00 !important;
+}
+
+.evento-errore {
+    border-left-color: #b00020 !important;
+    color: #7f0000;
+}
+
+.evento-orario {
+    font-weight: bold;
+    color: #555;
+    margin-right: 6px;
+}
+
+.vuoto {
+    color: #777;
+    font-style: italic;
+}
+
+.playButton {
+    background: #e8f5e9;
+    border-color: #81c784;
+    font-weight: bold;
+}
+
+.stopButton {
+    background: #fff3e0;
+    border-color: #ffb74d;
+    font-weight: bold;
+}
+
+.section {
+    border-top: 1px solid #eee;
+    padding-top: 16px;
+}
+
+input {
+    padding: 8px;
+    width: 80px;
+    margin: 4px;
+}
+
+button {
+    padding: 9px 14px;
+    margin: 4px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #f7f7f7;
+}
+
+button:hover {
+    background: #eaeaea;
+}
+
+.primary {
+    background: #e3f2fd;
+    border-color: #90caf9;
+}
+
+.dangerButton {
+    background: #ffebee;
+    border-color: #ef9a9a;
+}
+
+.floor-buttons button {
+    min-width: 46px;
+}
+
+#messaggio {
+    margin-top: 16px;
+    font-weight: bold;
+}
+
+@media (max-width: 900px) {
+    .header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .mode-switch {
+        justify-content: flex-start;
+    }
+
+    .simulatore-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .monitor-grid {
+        grid-template-columns: 1fr;
+    }
+}

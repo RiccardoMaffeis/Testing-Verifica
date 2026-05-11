@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulatore Ascensore</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>Simulatore Ascensore</h1>
+
+        <div class="mode-switch">
+            <button id="btnModalitaAutomatica"
+                    class="mode-button active"
+                    type="button"
+                    onclick="mostraModalita('automatica')">
+                Simulazione automatica
+            </button>
+
+            <button id="btnModalitaManuale"
+                    class="mode-button"
+                    type="button"
+                    onclick="mostraModalita('manuale')">
+                Controllo manuale
+            </button>
+        </div>
+    </div>
+
+    <div class="simulatore-panel">
+
+        <div class="ascensore-box">
+            <h2>Vista ascensore</h2>
+
+            <div class="vano">
+                <div class="piano-riga" id="pianoRiga4" style="top: 0px;">
+                    <div class="etichetta-piano">Piano 4</div>
+                </div>
+
+                <div class="piano-riga" id="pianoRiga3" style="top: 70px;">
+                    <div class="etichetta-piano">Piano 3</div>
+                </div>
+
+                <div class="piano-riga" id="pianoRiga2" style="top: 140px;">
+                    <div class="etichetta-piano">Piano 2</div>
+                </div>
+
+                <div class="piano-riga" id="pianoRiga1" style="top: 210px;">
+                    <div class="etichetta-piano">Piano 1</div>
+                </div>
+
+                <div class="piano-riga" id="pianoRiga0" style="top: 280px;">
+                    <div class="etichetta-piano">Piano 0</div>
+                </div>
+
+                <div class="piano-riga" id="pianoRigaM1" style="top: 350px;">
+                    <div class="etichetta-piano">Piano -1</div>
+                </div>
+
+                <div class="cabina" id="cabinaAscensore" style="bottom: 7px;">
+                    <div class="cabina-persone" id="cabinaPersone"></div>
+
+                    <div class="porte">
+                        <div class="porta porta-sx"></div>
+                        <div class="porta porta-dx"></div>
+                    </div>
+
+                    <div class="cabina-info" id="cabinaInfo">P0</div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h2 style="margin-top: 0;">Stato ascensore</h2>
+
+            <div class="grid">
+                <div class="card">
+                    <span class="label">Piano corrente</span>
+                    <span class="value" id="pianoCorrente">0</span>
+                </div>
+
+                <div class="card">
+                    <span class="label">Timer</span>
+                    <span class="value" id="timer">0</span>
+                </div>
+
+                <div class="card">
+                    <span class="label">Numero persone</span>
+                    <span class="value" id="numeroPersone">0</span>
+                </div>
+
+                <div class="card">
+                    <span class="label">Stato cabina</span>
+                    <span class="value" id="statoCabina">FERMA</span>
+                </div>
+
+                <div class="card">
+                    <span class="label">Stato porte</span>
+                    <span class="value" id="statoPorte">CHIUSE</span>
+                </div>
+
+                <div class="card">
+                    <span class="label">Direzione</span>
+                    <span class="value" id="direzione">NESSUNA</span>
+                </div>
+
+                <div class="card" id="statoErroreCard">
+                    <span class="label">Stato errore</span>
+                    <span class="value" id="statoErrore">NESSUNO</span>
+                </div>
+
+                <div class="card" id="simulazioneCard">
+                    <span class="label">Simulazione automatica</span>
+                    <span class="value" id="simulazioneAutomatica">FERMA</span>
+                </div>
+            </div>
+
+            <div class="quick-controls">
+                <h2>Comandi rapidi</h2>
+
+                <div id="comandiAutomatici">
+                    <button id="btnAvviaSimulazione"
+                            class="playButton"
+                            type="button"
+                            onclick="eseguiAzione('avviaSimulazione')">
+                        Avvia simulazione
+                    </button>
+
+                    <button id="btnFermaSimulazione"
+                            class="stopButton"
+                            type="button"
+                            onclick="eseguiAzione('fermaSimulazione')">
+                        Ferma simulazione
+                    </button>
+
+                    <button id="btnResetAutomatico"
+                            type="button"
+                            onclick="eseguiAzione('reset')">
+                        Reset
+                    </button>
+                </div>
+
+                <div id="comandiManuali" style="display: none;">
+                    <button id="btnPasso"
+                            class="primary"
+                            type="button"
+                            onclick="eseguiAzione('passo')">
+                        Esegui passo
+                    </button>
+
+                    <button id="btnGuasto"
+                            class="dangerButton"
+                            type="button"
+                            onclick="eseguiAzione('guasto')">
+                        Attiva guasto
+                    </button>
+
+                    <button id="btnResetManuale"
+                            type="button"
+                            onclick="eseguiAzione('reset')">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="monitor-grid">
+
+        <div class="monitor-card">
+            <h2>Richieste attive</h2>
+            <div id="richiesteAttive" class="richieste-lista"></div>
+        </div>
+
+        <div class="monitor-card">
+            <h2>Ultimi eventi</h2>
+            <ul id="ultimiEventi" class="eventi-lista"></ul>
+        </div>
+
+    </div>
+
+    <div id="pannelloManuale" class="mode-panel">
+
+        <div class="section">
+            <h2>Richiesta interna</h2>
+
+            <label for="pianoInterno">Piano:</label>
+            <input id="pianoInterno" type="number" min="-1" max="4" value="0">
+
+            <button id="btnRichiestaInterna"
+                    class="primary"
+                    type="button"
+                    onclick="richiestaInterna()">
+                Invia richiesta interna
+            </button>
+
+            <div class="floor-buttons">
+                <span>Rapido: </span>
+
+                <button id="btnInternoM1" type="button" onclick="eseguiAzione('richiestaInterna', {piano: -1})">-1</button>
+                <button id="btnInterno0" type="button" onclick="eseguiAzione('richiestaInterna', {piano: 0})">0</button>
+                <button id="btnInterno1" type="button" onclick="eseguiAzione('richiestaInterna', {piano: 1})">1</button>
+                <button id="btnInterno2" type="button" onclick="eseguiAzione('richiestaInterna', {piano: 2})">2</button>
+                <button id="btnInterno3" type="button" onclick="eseguiAzione('richiestaInterna', {piano: 3})">3</button>
+                <button id="btnInterno4" type="button" onclick="eseguiAzione('richiestaInterna', {piano: 4})">4</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Chiamata esterna</h2>
+
+            <label for="pianoSalita">Piano salita:</label>
+            <input id="pianoSalita" type="number" min="-1" max="4" value="0">
+
+            <button id="btnChiamataSalita"
+                    type="button"
+                    onclick="chiamataSalita()">
+                Chiamata salita
+            </button>
+
+            <br>
+
+            <label for="pianoDiscesa">Piano discesa:</label>
+            <input id="pianoDiscesa" type="number" min="-1" max="4" value="0">
+
+            <button id="btnChiamataDiscesa"
+                    type="button"
+                    onclick="chiamataDiscesa()">
+                Chiamata discesa
+            </button>
+        </div>
+
+        <div class="section">
+            <h2>Persone</h2>
+
+            <label for="personeEntrate">Entrate:</label>
+            <input id="personeEntrate" type="number" value="0">
+
+            <label for="personeUscite">Uscite:</label>
+            <input id="personeUscite" type="number" value="0">
+
+            <button id="btnAggiornaPersone"
+                    type="button"
+                    onclick="aggiornaPersone()">
+                Aggiorna persone
+            </button>
+        </div>
+
+    </div>
+
+    <div id="messaggio"></div>
+
+</div>
+
+<script src="/script.js"></script>
+
+</body>
+</html>

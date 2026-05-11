@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.AfterAll;
@@ -93,8 +93,8 @@ public class AscensoreWebSeleniumTest {
     }
 
     private static void inviaReset() throws Exception {
-        URL url = new URL(AZIONE_URL);
-        HttpURLConnection connessione = (HttpURLConnection) url.openConnection();
+        HttpURLConnection connessione =
+                (HttpURLConnection) URI.create(AZIONE_URL).toURL().openConnection();
 
         connessione.setRequestMethod("POST");
         connessione.setDoOutput(true);
