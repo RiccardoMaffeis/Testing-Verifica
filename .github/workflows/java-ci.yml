@@ -79,6 +79,17 @@ jobs:
             -d bin \
             $(find ci-stubs Codice/Java/Progetto/src -name "*.java")
 
+      - name: Copy webapp static files
+        run: |
+          cp -r Codice/Java/Progetto/webapp ./webapp
+          echo "Contenuto webapp copiato:"
+          ls -la webapp
+
+      - name: Debug webapp files
+        run: |
+          pwd
+          find . -maxdepth 4 -type f | sort | grep -E "webapp|index.html|style.css|script.js" || true
+
       - name: Run JUnit and Selenium tests
         env:
           CHROMEDRIVER_PATH: ${{ env.CHROMEDRIVER_PATH }}
