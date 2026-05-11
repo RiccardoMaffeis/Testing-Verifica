@@ -58,27 +58,34 @@ della classe `ControlloreAscensore`.
 
 ## 3. Struttura del codice
 
-Il codice è organizzato principalmente nel package `progetto`, che contiene il nucleo logico del sistema. A questo si aggiungono il package `web`, dedicato all’interfaccia dimostrativa, e il package `test`, dedicato ai test automatici.
+Il codice è organizzato principalmente nel package `progetto`, che contiene il nucleo logico del sistema. A questo si aggiungono il package `web`, dedicato al server HTTP dell’interfaccia dimostrativa, la cartella `webapp`, che contiene la parte statica dell’interfaccia, e il package `test`, dedicato ai test automatici.
 
 La struttura della parte Java è la seguente:
 
 ```text
-src/
-├── progetto/
-│   ├── Ascensore.java
-│   ├── ControlloreAscensore.java
-│   ├── InputAscensore.java
-│   ├── Direzione.java
-│   ├── StatoCabina.java
-│   ├── StatoPorte.java
-│   └── StatoErrore.java
+Codice/Java/Progetto/
+├── webapp/
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
 │
-├── web/
-│   └── AscensoreHttpServer.java
-│
-└── test/
-    ├── ControlloreAscensoreTest.java
-    └── AscensoreWebSeleniumTest.java
+└── src/
+    ├── progetto/
+    │   ├── Ascensore.java
+    │   ├── ControlloreAscensore.java
+    │   ├── InputAscensore.java
+    │   ├── Direzione.java
+    │   ├── StatoCabina.java
+    │   ├── StatoPorte.java
+    │   └── StatoErrore.java
+    │
+    ├── web/
+    │   └── AscensoreHttpServer.java
+    │
+    └── test/
+        ├── ControlloreAscensoreTest.java
+        ├── AscensoreParametricTest.java
+        └── AscensoreWebSeleniumTest.java
 ```
 
 Le classi principali sono:
@@ -86,9 +93,16 @@ Le classi principali sono:
 - `Ascensore`, che contiene lo stato interno e i metodi fondamentali dell’ascensore;
 - `InputAscensore`, che rappresenta gli input esterni ricevuti in un passo logico;
 - `ControlloreAscensore`, che coordina l’evoluzione del sistema;
-- `AscensoreHttpServer`, che realizza una semplice interfaccia web dimostrativa;
-- `ControlloreAscensoreTest`, che contiene i test JUnit sul nucleo logico;
+- `AscensoreHttpServer`, che realizza il server HTTP dell’interfaccia web dimostrativa;
+- `ControlloreAscensoreTest`, che contiene i test JUnit funzionali sul nucleo logico;
+- `AscensoreParametricTest`, che contiene test parametrici JUnit 5 su classi di input e casi limite;
 - `AscensoreWebSeleniumTest`, che contiene i test Selenium sull’interfaccia web.
+
+La parte statica dell’interfaccia è separata in tre file:
+
+- `index.html`, che definisce la struttura della pagina;
+- `style.css`, che definisce lo stile grafico;
+- `script.js`, che contiene la logica JavaScript di aggiornamento e interazione.
 
 Le enumerazioni utilizzate sono:
 
@@ -875,17 +889,18 @@ La pagina web mostra dinamicamente:
 
 ---
 
-## 24. Test JUnit
+## 24. Test JUnit 5
 
-Oltre alla verifica statica tramite JML/OpenJML, il progetto include una suite di test JUnit per verificare il comportamento eseguibile della parte Java.
+Oltre alla verifica statica tramite JML/OpenJML, il progetto include test JUnit 5 per verificare il comportamento eseguibile della parte Java.
 
-La classe di test è:
+Le classi di test principali sono:
 
 ```text
 ControlloreAscensoreTest
+AscensoreParametricTest
 ```
 
-La suite verifica, tra gli altri, i seguenti aspetti:
+La classe `ControlloreAscensoreTest` contiene test funzionali sul comportamento del sistema. La suite verifica, tra gli altri, i seguenti aspetti:
 
 - stato iniziale dell’ascensore;
 - comportamento in assenza di richieste;
@@ -898,15 +913,31 @@ La suite verifica, tra gli altri, i seguenti aspetti:
 - aggiornamento del numero di persone;
 - rifiuto di valori negativi per persone entrate o uscite;
 - ingresso e risoluzione dello stato di sovraccarico;
-- acquisizione di richieste durante lo stato `OVERLOAD`;
+- acquisizione di richieste durante lo stato OVERLOAD;
 - ingresso nello stato di guasto;
-- blocco di nuove richieste durante lo stato `GUASTO`;
+- blocco di nuove richieste durante lo stato GUASTO;
 - conservazione delle richieste già acquisite durante il guasto;
 - decremento del timer di guasto;
 - ripristino dopo il guasto;
 - casi limite della scelta della direzione;
 - casi limite del movimento ai piani estremi;
-- gestione di input `null`.
+- gestione di input null.
+
+La classe `AscensoreParametricTest` contiene invece test parametrici JUnit 5. Questi test permettono di eseguire la stessa logica di verifica su più valori di input, riducendo duplicazioni e rendendo più sistematico il controllo dei casi limite.
+
+I test parametrici verificano in particolare:
+
+- piani validi e non validi;
+- richieste interne su più piani;
+- chiamate di salita valide e non valide;
+- chiamate di discesa valide e non valide;
+- aggiornamento del numero di persone;
+- soglie di sovraccarico;
+- decremento del timer di guasto;
+- scelta della direzione;
+- movimento coerente con la direzione selezionata.
+
+I test parametrici non sostituiscono i test funzionali, ma li completano. I test funzionali controllano scenari completi del sistema, mentre i test parametrici permettono di verificare più classi di input con una struttura compatta.
 
 I test sono stati eseguiti sia in ambiente Eclipse tramite JUnit, sia automaticamente nella pipeline GitHub Actions. La copertura del codice è stata analizzata tramite EclEmma.
 
@@ -999,27 +1030,28 @@ Per questo motivo, la verifica statica tramite JML è stata affiancata da test J
 
 La classe `Ascensore` e le classi di supporto soddisfano i principali requisiti funzionali del sistema:
 
-| Requisito                       | Implementazione                                  |
-| ------------------------------- | ------------------------------------------------ |
-| Gestione dei piani              | `pianoCorrente`, `pianoValido`, `indiceDelPiano` |
-| Richieste interne               | `aggiungiRichiestaInterna`                       |
-| Chiamate esterne verso l’alto   | `aggiungiChiamataSalita`                         |
-| Chiamate esterne verso il basso | `aggiungiChiamataDiscesa`                        |
-| Movimento della cabina          | `muoviDiUnPiano`                                 |
-| Scelta della direzione          | `scegliDirezione`                                |
-| Apertura porte al piano servito | `serviPianoCorrente`                             |
-| Chiusura porte                  | `chiudiPorte`                                    |
-| Stato di attesa                 | `mettiInAttesa`                                  |
-| Gestione persone                | `aggiornaPersone`                                |
-| Gestione sovraccarico           | `gestisciSovraccarico`                           |
-| Gestione guasto                 | `attivaGuasto`                                   |
-| Ripristino da guasto            | `gestisciTimerGuasto`                            |
-| Input esterni                   | `InputAscensore`                                 |
-| Coordinamento del passo logico  | `ControlloreAscensore.eseguiPasso`               |
-| Validazione tramite test        | `ControlloreAscensoreTest`                       |
-| Interfaccia web dimostrativa    | `AscensoreHttpServer`                            |
-| Test dell’interfaccia web       | `AscensoreWebSeleniumTest`                       |
-| Continuous Integration          | `java-ci.yml`                                    |
+| Requisito | Implementazione |
+|---|---|
+| Gestione dei piani | `pianoCorrente`, `pianoValido`, `indiceDelPiano` |
+| Richieste interne | `aggiungiRichiestaInterna` |
+| Chiamate esterne verso l’alto | `aggiungiChiamataSalita` |
+| Chiamate esterne verso il basso | `aggiungiChiamataDiscesa` |
+| Movimento della cabina | `muoviDiUnPiano` |
+| Scelta della direzione | `scegliDirezione` |
+| Apertura porte al piano servito | `serviPianoCorrente` |
+| Chiusura porte | `chiudiPorte` |
+| Stato di attesa | `mettiInAttesa` |
+| Gestione persone | `aggiornaPersone` |
+| Gestione sovraccarico | `gestisciSovraccarico` |
+| Gestione guasto | `attivaGuasto` |
+| Ripristino da guasto | `gestisciTimerGuasto` |
+| Input esterni | `InputAscensore` |
+| Coordinamento del passo logico | `ControlloreAscensore.eseguiPasso` |
+| Test funzionali del nucleo Java | `ControlloreAscensoreTest` |
+| Test parametrici su classi di input e casi limite | `AscensoreParametricTest` |
+| Interfaccia web dimostrativa | `AscensoreHttpServer`, `index.html`, `style.css`, `script.js` |
+| Test dell’interfaccia web | `AscensoreWebSeleniumTest` |
+| Continuous Integration | `java-ci.yml` |
 
 ---
 
@@ -1043,10 +1075,12 @@ La specifica JML permette di formalizzare le principali proprietà di sicurezza 
 
 Il codice Java non sostituisce il modello ASM completo, ma ne implementa una parte significativa in forma eseguibile e verificabile.
 
-La verifica tramite ESC/OpenJML e i test JUnit consentono di controllare sia le proprietà specificate formalmente tramite JML, sia il comportamento operativo del sistema nei principali scenari previsti. Inoltre, il collegamento tra scenari AVALLA e test JUnit permette di mostrare la continuità tra validazione del modello ASM e verifica dell’implementazione Java.
+La verifica tramite ESC/OpenJML controlla il rispetto delle specifiche JML sui metodi principali della classe `Ascensore`. I test JUnit 5 verificano invece il comportamento operativo del sistema nei principali scenari previsti, mentre i test parametrici rafforzano il controllo su classi di input, valori limite e condizioni di validità.
 
-L’interfaccia web dimostrativa permette inoltre di osservare dinamicamente il comportamento del nucleo Java e di interagire con il sistema in modalità automatica o manuale. Poiché utilizza direttamente `Ascensore`, `ControlloreAscensore` e `InputAscensore`, essa rimane coerente con la logica implementativa verificata. I test Selenium completano questa parte controllando che pagina web, server HTTP e nucleo logico Java interagiscano correttamente.
+Il collegamento tra scenari AVALLA e test JUnit mostra la continuità tra validazione del modello ASM e verifica dell’implementazione Java: alcuni comportamenti validati nel modello astratto sono stati ripresi anche nei test eseguibili del nucleo Java.
 
-La parte Java/JML può quindi essere considerata coerente con il modello formale e adeguata come nucleo implementativo del progetto.
+L’interfaccia web dimostrativa permette di osservare dinamicamente il comportamento del nucleo Java e di interagire con il sistema in modalità automatica o manuale. Poiché utilizza direttamente `Ascensore`, `ControlloreAscensore` e `InputAscensore`, essa rimane coerente con la logica implementativa verificata. I test Selenium completano questa parte controllando che pagina web, server HTTP e nucleo logico Java interagiscano correttamente.
 
-Infine, i test automatici JUnit e Selenium sono stati integrati in un workflow GitHub Actions, così da automatizzare la compilazione del progetto e l’esecuzione dei test a ogni modifica del repository.
+Infine, i test automatici JUnit, i test parametrici e i test Selenium sono stati integrati in un workflow GitHub Actions, così da automatizzare la compilazione del progetto e l’esecuzione dei test a ogni modifica del repository.
+
+Nel complesso, la parte Java/JML può essere considerata coerente con il modello formale e adeguata come nucleo implementativo del progetto.
