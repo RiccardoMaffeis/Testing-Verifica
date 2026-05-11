@@ -8,7 +8,9 @@ L’obiettivo dell’implementazione Java non è quello di sostituire il modello
 
 Alla classe `Ascensore` si affiancano la classe `InputAscensore`, usata per rappresentare gli input esterni, e la classe `ControlloreAscensore`, che coordina l’evoluzione del sistema a ogni passo logico.
 
-La verifica dell’implementazione è stata svolta tramite specifiche JML, ESC/OpenJML e test JUnit.
+La verifica dell’implementazione è stata svolta tramite specifiche JML, ESC/OpenJML, test JUnit e test Selenium sull’interfaccia web dimostrativa.
+
+Oltre al nucleo logico, il progetto include una semplice interfaccia web basata su `HttpServer`, utilizzata per osservare dinamicamente il comportamento dell’ascensore e per interagire con il sistema in modalità automatica o manuale. L’interfaccia utilizza direttamente le classi del nucleo Java e non introduce una nuova logica di controllo.
 
 ---
 
@@ -56,11 +58,7 @@ della classe `ControlloreAscensore`.
 
 ## 3. Struttura del codice
 
-Il codice è organizzato nel package:
-
-```java
-package progetto;
-```
+Il codice è organizzato principalmente nel package `progetto`, che contiene il nucleo logico del sistema. A questo si aggiungono il package `web`, dedicato all’interfaccia dimostrativa, e il package `test`, dedicato ai test automatici.
 
 La struttura della parte Java è la seguente:
 
@@ -75,8 +73,12 @@ src/
 │   ├── StatoPorte.java
 │   └── StatoErrore.java
 │
+├── web/
+│   └── AscensoreHttpServer.java
+│
 └── test/
-    └── ControlloreAscensoreTest.java
+    ├── ControlloreAscensoreTest.java
+    └── AscensoreWebSeleniumTest.java
 ```
 
 Le classi principali sono:
@@ -84,7 +86,9 @@ Le classi principali sono:
 - `Ascensore`, che contiene lo stato interno e i metodi fondamentali dell’ascensore;
 - `InputAscensore`, che rappresenta gli input esterni ricevuti in un passo logico;
 - `ControlloreAscensore`, che coordina l’evoluzione del sistema;
-- `ControlloreAscensoreTest`, che contiene i test JUnit.
+- `AscensoreHttpServer`, che realizza una semplice interfaccia web dimostrativa;
+- `ControlloreAscensoreTest`, che contiene i test JUnit sul nucleo logico;
+- `AscensoreWebSeleniumTest`, che contiene i test Selenium sull’interfaccia web.
 
 Le enumerazioni utilizzate sono:
 
@@ -810,13 +814,74 @@ In questo modo `ControlloreAscensore` svolge un ruolo simile alla regola princip
 
 ---
 
-## 23. Test JUnit
+## 23. Interfaccia web dimostrativa
+
+Oltre al nucleo logico del sistema, il progetto include una semplice interfaccia web dimostrativa realizzata tramite `HttpServer` di Java.
+
+La classe principale è:
+
+```text
+AscensoreHttpServer
+```
+
+L’interfaccia web ha lo scopo di rendere osservabile il comportamento del nucleo Java dell’ascensore. Non introduce una nuova logica di gestione del sistema, ma utilizza direttamente le classi già presenti nell’implementazione:
+
+```text
+Ascensore
+ControlloreAscensore
+InputAscensore
+```
+
+La classe `AscensoreHttpServer` espone tre endpoint principali:
+
+```text
+/
+```
+
+utilizzato per restituire la pagina HTML dell’interfaccia;
+
+```text
+/stato
+```
+
+utilizzato per ottenere lo stato corrente dell’ascensore in formato JSON;
+
+```text
+/azione
+```
+
+utilizzato per inviare comandi al sistema, come richieste interne, chiamate esterne, aggiornamento del numero di persone, guasto, reset e gestione della simulazione automatica.
+
+L’interfaccia supporta due modalità operative:
+
+- simulazione automatica;
+- controllo manuale.
+
+Nella modalità automatica il sistema genera periodicamente richieste, ingressi e uscite di persone e possibili guasti. 
+Nella modalità manuale l’utente può invece inserire direttamente richieste interne, chiamate esterne, variazioni del numero di persone e guasti.
+
+La pagina web mostra dinamicamente:
+
+- piano corrente;
+- numero di persone;
+- stato della cabina;
+- stato delle porte;
+- direzione;
+- stato di errore;
+- stato della simulazione automatica;
+- richieste attive;
+- log degli eventi principali;
+- rappresentazione grafica semplificata della cabina.
+
+---
+
+## 24. Test JUnit
 
 Oltre alla verifica statica tramite JML/OpenJML, il progetto include una suite di test JUnit per verificare il comportamento eseguibile della parte Java.
 
 La classe di test è:
 
-```java
+```text
 ControlloreAscensoreTest
 ```
 
@@ -843,11 +908,52 @@ La suite verifica, tra gli altri, i seguenti aspetti:
 - casi limite del movimento ai piani estremi;
 - gestione di input `null`.
 
-I test sono stati eseguiti in ambiente Eclipse tramite JUnit. La copertura del codice è stata analizzata tramite EclEmma.
+I test sono stati eseguiti sia in ambiente Eclipse tramite JUnit, sia automaticamente nella pipeline GitHub Actions. La copertura del codice è stata analizzata tramite EclEmma.
 
 ---
 
-## 24. Verifica tramite ESC/OpenJML
+## 25. Test Selenium
+
+Oltre ai test JUnit sul nucleo logico, il progetto include test Selenium per verificare il corretto funzionamento dell’interfaccia web dimostrativa.
+
+La classe di test è:
+
+```text
+AscensoreWebSeleniumTest
+```
+
+I test Selenium sono test di integrazione, perché verificano il collegamento tra:
+
+```text
+pagina web
+server HTTP
+ControlloreAscensore
+Ascensore
+```
+
+Prima di ogni test viene eseguito un reset dello stato del sistema, così da rendere i test indipendenti tra loro. 
+Al termine dell’esecuzione, il browser viene chiuso e il server viene arrestato.
+
+I test Selenium verificano in particolare:
+
+- apertura corretta della pagina web;
+- visualizzazione dello stato iniziale dell’ascensore;
+- passaggio alla modalità di controllo manuale;
+- inserimento di una richiesta interna tramite interfaccia;
+- aggiornamento della sezione delle richieste attive;
+- reset dei campi di input manuali dopo l’invio;
+- avvio e arresto della simulazione automatica;
+- disabilitazione del controllo manuale durante la simulazione automatica;
+- visualizzazione dello stato di guasto;
+- visualizzazione dello stato di sovraccarico.
+
+In locale i test utilizzano il ChromeDriver presente nella cartella `drivers`, mentre nella pipeline GitHub Actions ChromeDriver viene configurato automaticamente per l’ambiente Linux del runner. In CI i test vengono eseguiti in modalità headless.
+
+Questi test non sostituiscono i test JUnit sul nucleo logico, ma verificano che l’interfaccia web sia correttamente collegata alla logica Java del sistema.
+
+---
+
+## 26. Verifica tramite ESC/OpenJML
 
 La verifica statica è stata eseguita mediante ESC di OpenJML.
 
@@ -863,11 +969,11 @@ La verifica ha permesso di controllare la coerenza del codice rispetto alle prop
 
 Alcuni metodi con logica decisionale più articolata, come `scegliDirezione`, possono risultare più difficili da dimostrare completamente tramite verifica automatica. Questo non indica necessariamente un errore nel comportamento, ma rappresenta un limite pratico della verifica statica.
 
-Per questo motivo, la verifica statica tramite JML è stata affiancata da test JUnit sul comportamento eseguibile.
+Per questo motivo, la verifica statica tramite JML è stata affiancata da test JUnit sul comportamento eseguibile e da test Selenium per verificare l’integrazione dell’interfaccia web con il nucleo Java.
 
 ---
 
-## 25. Confronto con i requisiti del sistema
+## 27. Confronto con i requisiti del sistema
 
 La classe `Ascensore` e le classi di supporto soddisfano i principali requisiti funzionali del sistema:
 
@@ -889,10 +995,13 @@ La classe `Ascensore` e le classi di supporto soddisfano i principali requisiti 
 | Input esterni                   | `InputAscensore`                                 |
 | Coordinamento del passo logico  | `ControlloreAscensore.eseguiPasso`               |
 | Validazione tramite test        | `ControlloreAscensoreTest`                       |
+| Interfaccia web dimostrativa    | `AscensoreHttpServer`                            |
+| Test dell’interfaccia web       | `AscensoreWebSeleniumTest`                       |
+| Continuous Integration          | `java-ci.yml`                                    |
 
 ---
 
-## 26. Conclusione
+## 28. Conclusione
 
 L’implementazione Java rappresenta il nucleo logico principale del sistema ascensore modellato in ASM.
 
@@ -914,6 +1023,8 @@ Il codice Java non sostituisce il modello ASM completo, ma ne implementa una par
 
 La verifica tramite ESC/OpenJML e i test JUnit consentono di controllare sia le proprietà specificate formalmente tramite JML, sia il comportamento operativo del sistema nei principali scenari previsti.
 
+L’interfaccia web dimostrativa permette inoltre di osservare dinamicamente il comportamento del nucleo Java e di interagire con il sistema in modalità automatica o manuale. Poiché utilizza direttamente `Ascensore`, `ControlloreAscensore` e `InputAscensore`, essa rimane coerente con la logica implementativa verificata. I test Selenium completano questa parte controllando che pagina web, server HTTP e nucleo logico Java interagiscano correttamente.
+
 La parte Java/JML può quindi essere considerata coerente con il modello formale e adeguata come nucleo implementativo del progetto.
 
-Infine, la suite di test JUnit è stata integrata in un workflow GitHub Actions, così da automatizzare la compilazione del progetto e l’esecuzione dei test a ogni modifica del repository.
+Infine, i test automatici JUnit e Selenium sono stati integrati in un workflow GitHub Actions, così da automatizzare la compilazione del progetto e l’esecuzione dei test a ogni modifica del repository.
