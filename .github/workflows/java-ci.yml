@@ -21,6 +21,23 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Setup Google Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Setup ChromeDriver
+        uses: nanasess/setup-chromedriver@v2
+
+      - name: Show Java, Chrome and ChromeDriver versions
+        run: |
+          java -version
+          google-chrome --version
+          chromedriver --version
+          which chromedriver
+
+      - name: Set ChromeDriver path
+        run: |
+          echo "CHROMEDRIVER_PATH=$(which chromedriver)" >> $GITHUB_ENV
+
       - name: Create folders
         run: |
           mkdir -p lib
@@ -48,16 +65,25 @@ jobs:
           }
           EOF
 
+      - name: Build Selenium classpath
+        run: |
+          SELENIUM_CP=$(find Codice/Java/Progetto/lib/selenium -name "*.jar" | paste -sd ":" -)
+          echo "SELENIUM_CP=$SELENIUM_CP" >> $GITHUB_ENV
+          echo "Selenium classpath:"
+          echo "$SELENIUM_CP"
+
       - name: Compile source and tests
         run: |
           javac \
-            -cp "lib/junit-platform-console-standalone.jar" \
+            -cp "lib/junit-platform-console-standalone.jar:${SELENIUM_CP}" \
             -d bin \
             $(find ci-stubs Codice/Java/Progetto/src -name "*.java")
 
-      - name: Run JUnit tests
+      - name: Run JUnit and Selenium tests
+        env:
+          CHROMEDRIVER_PATH: ${{ env.CHROMEDRIVER_PATH }}
         run: |
           java \
             -jar lib/junit-platform-console-standalone.jar \
-            --class-path bin \
+            --class-path "bin:${SELENIUM_CP}" \
             --scan-class-path
