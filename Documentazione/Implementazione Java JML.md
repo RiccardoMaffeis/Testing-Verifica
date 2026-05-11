@@ -912,6 +912,28 @@ I test sono stati eseguiti sia in ambiente Eclipse tramite JUnit, sia automatica
 
 ---
 
+### Collegamento tra scenari AVALLA e test JUnit
+
+Alcuni scenari AVALLA utilizzati per validare il modello ASM sono stati ripresi anche nella suite JUnit dell’implementazione Java.  
+Questo permette di mantenere un collegamento tra la validazione del modello astratto e la verifica eseguibile del nucleo Java.
+
+| Scenario AVALLA | Comportamento verificato nel modello ASM | Test JUnit corrispondente | Comportamento verificato nel codice Java |
+|---|---|---|---|
+| `scenario_idle.avalla` | Verifica che, in assenza di richieste, l’ascensore rimanga fermo nello stato iniziale. | `idleSenzaRichieste()` | Verifica che, eseguendo un passo senza input, l’ascensore resti al piano 0, con cabina ferma, porte chiuse, direzione `NESSUNA` e nessun errore. |
+| `scenario_richiesta_piano_superiore.avalla` | Verifica l’acquisizione di una richiesta verso un piano superiore, il movimento verso l’alto e il servizio del piano richiesto. | `richiestaInternaVersoPianoSuperiore()` e `ascensoreServePianoSuperioreRichiesto()` | Verifica che una richiesta interna verso il piano 3 venga acquisita, che l’ascensore scelga la direzione `SU`, si muova verso l’alto e, una volta raggiunto il piano, apra le porte e rimuova la richiesta. |
+| `scenario_richiesta_piano_inferiore.avalla` | Verifica l’acquisizione di una richiesta verso un piano inferiore, il movimento verso il basso e il servizio del piano richiesto. | `richiestaVersoPianoInferiore()` | Verifica che, dopo aver portato l’ascensore a un piano superiore, una richiesta verso un piano inferiore venga acquisita e produca movimento in direzione `GIU`. |
+| `scenario_overload.avalla` | Verifica l’ingresso nello stato `OVERLOAD` quando il numero di persone supera la capacità massima. | `entraInOverload()` | Verifica che, con 9 persone in cabina, il sistema entri nello stato `OVERLOAD`, blocchi la cabina, mantenga le porte aperte e imposti la direzione a `NESSUNA`. |
+| `scenario_risoluzione_overload.avalla` | Verifica l’uscita dallo stato `OVERLOAD` quando il numero di persone torna entro la capacità massima. | `risolveOverloadQuandoUnaPersonaEsce()` | Verifica che, dopo l’uscita di una persona, il numero di persone torni a 8 e il sistema rientri nello stato operativo `NESSUNO`, con cabina ferma, porte chiuse e direzione `NESSUNA`. |
+| `scenario_richieste_durante_overload.avalla` | Verifica che durante lo stato `OVERLOAD` le richieste possano essere ancora acquisite. | `richiesteDuranteOverloadVengonoAcquisite()` | Verifica che, mentre il sistema è in sovraccarico, una richiesta interna valida venga comunque registrata tra le richieste attive. |
+| `scenario_guasto.avalla` | Verifica l’ingresso nello stato `GUASTO` quando viene generato un evento di guasto. | `attivaGuastoTecnico()` | Verifica che l’evento di guasto imposti lo stato `GUASTO`, blocchi la cabina, chiuda le porte, annulli la direzione e inizializzi il timer al valore massimo. |
+| `scenario_blocco_richieste_durante_guasto.avalla` | Verifica che durante lo stato `GUASTO` non vengano acquisite nuove richieste. | `nonAcquisisceNuoveRichiesteDuranteGuasto()` | Verifica che una richiesta inserita mentre il sistema è in guasto venga ignorata e non risulti attiva. |
+| `scenario_conservazione_richieste_guasto.avalla` | Verifica che una richiesta acquisita prima del guasto venga conservata durante il guasto. | `conservaRichiesteGiaAcquisiteDuranteGuasto()` | Verifica che una richiesta già attiva prima dell’attivazione del guasto rimanga memorizzata anche durante lo stato `GUASTO`. |
+| `scenario_ripristino_guasto.avalla` | Verifica il decremento del timer di guasto e il ritorno allo stato operativo. | `decrementaTimerDuranteGuasto()` e `ripristinaDopoGuasto()` | Verifica che il timer venga decrementato durante il guasto e che, una volta terminato, il sistema torni allo stato `NESSUNO`, con cabina ferma, porte chiuse e direzione `NESSUNA`. |
+
+Questa corrispondenza non sostituisce la validazione AVALLA, ma mostra che i principali comportamenti osservati nel modello ASM sono stati ripresi anche nei test eseguibili dell’implementazione Java.
+
+---
+
 ## 25. Test Selenium
 
 Oltre ai test JUnit sul nucleo logico, il progetto include test Selenium per verificare il corretto funzionamento dell’interfaccia web dimostrativa.
@@ -1021,7 +1043,7 @@ La specifica JML permette di formalizzare le principali proprietà di sicurezza 
 
 Il codice Java non sostituisce il modello ASM completo, ma ne implementa una parte significativa in forma eseguibile e verificabile.
 
-La verifica tramite ESC/OpenJML e i test JUnit consentono di controllare sia le proprietà specificate formalmente tramite JML, sia il comportamento operativo del sistema nei principali scenari previsti.
+La verifica tramite ESC/OpenJML e i test JUnit consentono di controllare sia le proprietà specificate formalmente tramite JML, sia il comportamento operativo del sistema nei principali scenari previsti. Inoltre, il collegamento tra scenari AVALLA e test JUnit permette di mostrare la continuità tra validazione del modello ASM e verifica dell’implementazione Java.
 
 L’interfaccia web dimostrativa permette inoltre di osservare dinamicamente il comportamento del nucleo Java e di interagire con il sistema in modalità automatica o manuale. Poiché utilizza direttamente `Ascensore`, `ControlloreAscensore` e `InputAscensore`, essa rimane coerente con la logica implementativa verificata. I test Selenium completano questa parte controllando che pagina web, server HTTP e nucleo logico Java interagiscano correttamente.
 
