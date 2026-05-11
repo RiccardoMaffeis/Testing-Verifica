@@ -117,14 +117,8 @@ public class AscensoreHttpServer {
             return;
         }
 
-        Path fileAssoluto = file.toAbsolutePath().normalize();
-
-        System.out.println("Richiesta file statico: " + fileAssoluto);
-
         if (!Files.exists(file)) {
-            String messaggio = "File statico non trovato: " + fileAssoluto;
-
-            System.out.println(messaggio);
+            String messaggio = "File statico non trovato: " + file.toAbsolutePath().normalize();
 
             inviaRisposta(exchange, 404, CONTENT_TYPE_HTML,
                     "<h1>404 - File statico non trovato</h1><p>"
@@ -134,8 +128,6 @@ public class AscensoreHttpServer {
         }
 
         byte[] contenuto = Files.readAllBytes(file);
-
-        System.out.println("Dimensione file statico: " + contenuto.length + " byte");
 
         exchange.getResponseHeaders().set("Content-Type", contentType);
         exchange.sendResponseHeaders(200, contenuto.length);

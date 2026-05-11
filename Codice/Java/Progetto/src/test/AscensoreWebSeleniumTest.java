@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +18,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import web.AscensoreHttpServer;
 
@@ -33,13 +34,11 @@ public class AscensoreWebSeleniumTest {
 
     private static final String CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
 
-    private static final int ATTESA_BREVE_MS = 300;
-    private static final int ATTESA_MEDIA_MS = 500;
-    private static final int ATTESA_SIMULAZIONE_MS = 1200;
-    private static final int ATTESA_STOP_SIMULAZIONE_MS = 700;
+    private static final long ATTESA_MASSIMA_SECONDI = 5;
 
     private static AscensoreHttpServer server;
     private static WebDriver driver;
+    private static WebDriverWait wait;
 
     @BeforeAll
     public static void setup() throws Exception {
@@ -48,13 +47,17 @@ public class AscensoreWebSeleniumTest {
 
         configuraChromeDriver();
         avviaBrowserHeadless();
+
+        wait = new WebDriverWait(driver, ATTESA_MASSIMA_SECONDI);
     }
 
     @BeforeEach
     public void resetPrimaDiOgniTest() throws Exception {
         inviaReset();
         driver.get(BASE_URL);
-        Thread.sleep(ATTESA_BREVE_MS);
+
+        attendiElementoVisibile(By.tagName("h1"));
+        attendiTesto(By.id("statoErrore"), "NESSUNO");
     }
 
     @AfterAll
@@ -110,6 +113,56 @@ public class AscensoreWebSeleniumTest {
         connessione.disconnect();
     }
 
+    private static WebElement attendiElementoVisibile(By selettore) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(selettore));
+    }
+
+    private static WebElement attendiElementoCliccabile(By selettore) {
+        return wait.until(ExpectedConditions.elementToBeClickable(selettore));
+    }
+
+    private static void attendiTesto(By selettore, String testoAtteso) {
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(selettore, testoAtteso));
+    }
+
+    private static void attendiTestoContenuto(By selettore, String testoAtteso) {
+        wait.until(driverCorrente ->
+                driverCorrente.findElement(selettore).getText().contains(testoAtteso)
+        );
+    }
+
+    private static void attendiClasseContenente(By selettore, String classeAttesa) {
+        wait.until(driverCorrente -> {
+            String classi = driverCorrente.findElement(selettore).getAttribute("class");
+            return classi != null && classi.contains(classeAttesa);
+        });
+    }
+
+    private static void attendiValoreInput(By selettore, String valoreAtteso) {
+        wait.until(driverCorrente ->
+                valoreAtteso.equals(driverCorrente.findElement(selettore).getAttribute("value"))
+        );
+    }
+
+    private static void attendiBottoneDisabilitato(By selettore) {
+        wait.until(driverCorrente ->
+                !driverCorrente.findElement(selettore).isEnabled()
+        );
+    }
+
+    private static void attendiBottoneAbilitato(By selettore) {
+        wait.until(driverCorrente ->
+                driverCorrente.findElement(selettore).isEnabled()
+        );
+    }
+
+    private static void passaAModalitaManuale() {
+        attendiElementoCliccabile(By.id("btnModalitaManuale")).click();
+
+        attendiClasseContenente(By.id("pannelloManuale"), "active");
+        attendiClasseContenente(By.id("btnModalitaManuale"), "active");
+    }
+
     @Test
     public void paginaInizialeMostraStatoAscensore() {
         assertEquals("Simulatore Ascensore", driver.findElement(By.tagName("h1")).getText());
@@ -122,10 +175,8 @@ public class AscensoreWebSeleniumTest {
     }
 
     @Test
-    public void passaggioAControlloManualeMostraPannelloManuale() throws InterruptedException {
-        driver.findElement(By.id("btnModalitaManuale")).click();
-
-        Thread.sleep(ATTESA_MEDIA_MS);
+    public void passaggioAControlloManualeMostraPannelloManuale() {
+        passaAModalitaManuale();
 
         WebElement pannelloManuale = driver.findElement(By.id("pannelloManuale"));
 
@@ -134,18 +185,17 @@ public class AscensoreWebSeleniumTest {
     }
 
     @Test
-    public void richiestaInternaManualeAggiornaRichiesteAttive() throws InterruptedException {
-        driver.findElement(By.id("btnModalitaManuale")).click();
+    public void richiestaInternaManualeAggiornaRichiesteAttive() {
+        passaAModalitaManuale();
 
-        Thread.sleep(ATTESA_MEDIA_MS);
-
-        WebElement inputPiano = driver.findElement(By.id("pianoInterno"));
+        WebElement inputPiano = attendiElementoVisibile(By.id("pianoInterno"));
         inputPiano.clear();
         inputPiano.sendKeys("2");
 
-        driver.findElement(By.id("btnRichiestaInterna")).click();
+        attendiElementoCliccabile(By.id("btnRichiestaInterna")).click();
 
-        Thread.sleep(ATTESA_MEDIA_MS);
+        attendiTestoContenuto(By.id("richiesteAttive"), "Piano 2");
+        attendiTestoContenuto(By.id("richiesteAttive"), "Interna");
 
         String richiesteAttive = driver.findElement(By.id("richiesteAttive")).getText();
 
@@ -154,51 +204,47 @@ public class AscensoreWebSeleniumTest {
     }
 
     @Test
-    public void inputManualiVengonoResettatiDopoInvio() throws InterruptedException {
-        driver.findElement(By.id("btnModalitaManuale")).click();
+    public void inputManualiVengonoResettatiDopoInvio() {
+        passaAModalitaManuale();
 
-        Thread.sleep(ATTESA_MEDIA_MS);
-
-        WebElement inputPiano = driver.findElement(By.id("pianoInterno"));
+        WebElement inputPiano = attendiElementoVisibile(By.id("pianoInterno"));
         inputPiano.clear();
         inputPiano.sendKeys("3");
 
-        driver.findElement(By.id("btnRichiestaInterna")).click();
+        attendiElementoCliccabile(By.id("btnRichiestaInterna")).click();
 
-        Thread.sleep(ATTESA_MEDIA_MS);
+        attendiValoreInput(By.id("pianoInterno"), "0");
 
         assertEquals("0", driver.findElement(By.id("pianoInterno")).getAttribute("value"));
     }
 
     @Test
-    public void simulazioneAutomaticaDisabilitaControlloManuale() throws InterruptedException {
-        driver.findElement(By.id("btnAvviaSimulazione")).click();
+    public void simulazioneAutomaticaDisabilitaControlloManuale() {
+        attendiElementoCliccabile(By.id("btnAvviaSimulazione")).click();
 
-        Thread.sleep(ATTESA_SIMULAZIONE_MS);
-
-        assertEquals("ATTIVA", driver.findElement(By.id("simulazioneAutomatica")).getText());
+        attendiTesto(By.id("simulazioneAutomatica"), "ATTIVA");
 
         WebElement btnManuale = driver.findElement(By.id("btnModalitaManuale"));
+        attendiBottoneDisabilitato(By.id("btnModalitaManuale"));
+
         assertFalse(btnManuale.isEnabled());
 
-        driver.findElement(By.id("btnFermaSimulazione")).click();
+        attendiElementoCliccabile(By.id("btnFermaSimulazione")).click();
 
-        Thread.sleep(ATTESA_STOP_SIMULAZIONE_MS);
-
-        assertEquals("FERMA", driver.findElement(By.id("simulazioneAutomatica")).getText());
+        attendiTesto(By.id("simulazioneAutomatica"), "FERMA");
+        attendiBottoneAbilitato(By.id("btnModalitaManuale"));
 
         assertTrue(driver.findElement(By.id("btnModalitaManuale")).isEnabled());
     }
 
     @Test
-    public void guastoManualeAggiornaStatoErrore() throws InterruptedException {
-        driver.findElement(By.id("btnModalitaManuale")).click();
+    public void guastoManualeAggiornaStatoErrore() {
+        passaAModalitaManuale();
 
-        Thread.sleep(ATTESA_MEDIA_MS);
+        attendiElementoCliccabile(By.id("btnGuasto")).click();
 
-        driver.findElement(By.id("btnGuasto")).click();
-
-        Thread.sleep(ATTESA_MEDIA_MS);
+        attendiTesto(By.id("statoErrore"), "GUASTO");
+        attendiTestoContenuto(By.id("ultimiEventi"), "Guasto attivato manualmente");
 
         assertEquals("GUASTO", driver.findElement(By.id("statoErrore")).getText());
 
@@ -207,28 +253,28 @@ public class AscensoreWebSeleniumTest {
     }
 
     @Test
-    public void overloadManualeAggiornaStatoErrore() throws InterruptedException {
-        driver.findElement(By.id("btnModalitaManuale")).click();
+    public void overloadManualeAggiornaStatoErrore() {
+        passaAModalitaManuale();
 
-        Thread.sleep(ATTESA_MEDIA_MS);
-
-        WebElement inputPiano = driver.findElement(By.id("pianoInterno"));
+        WebElement inputPiano = attendiElementoVisibile(By.id("pianoInterno"));
         inputPiano.clear();
         inputPiano.sendKeys("0");
 
-        driver.findElement(By.id("btnRichiestaInterna")).click();
+        attendiElementoCliccabile(By.id("btnRichiestaInterna")).click();
 
-        Thread.sleep(ATTESA_MEDIA_MS);
+        attendiTesto(By.id("statoPorte"), "APERTE");
 
         assertEquals("APERTE", driver.findElement(By.id("statoPorte")).getText());
 
-        WebElement personeEntrate = driver.findElement(By.id("personeEntrate"));
+        WebElement personeEntrate = attendiElementoVisibile(By.id("personeEntrate"));
         personeEntrate.clear();
         personeEntrate.sendKeys("9");
 
-        driver.findElement(By.id("btnAggiornaPersone")).click();
+        attendiElementoCliccabile(By.id("btnAggiornaPersone")).click();
 
-        Thread.sleep(ATTESA_MEDIA_MS);
+        attendiTesto(By.id("statoErrore"), "OVERLOAD");
+        attendiTesto(By.id("numeroPersone"), "9");
+        attendiTestoContenuto(By.id("ultimiEventi"), "Entrate 9 persone");
 
         assertEquals("OVERLOAD", driver.findElement(By.id("statoErrore")).getText());
         assertEquals("9", driver.findElement(By.id("numeroPersone")).getText());
