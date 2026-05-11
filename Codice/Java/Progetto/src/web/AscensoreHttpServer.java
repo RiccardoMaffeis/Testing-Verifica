@@ -11,6 +11,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +32,10 @@ public class AscensoreHttpServer {
     private static final int PROBABILITA_INGRESSO_EXTRA = 30;
 
     private static final int NUMERO_EVENTI_VISUALIZZATI = 8;
+
+    private static final String CONTENT_TYPE_HTML = "text/html; charset=UTF-8";
+    private static final String CONTENT_TYPE_JSON = "application/json; charset=UTF-8";
+    private static final String ENCODING_UTF_8 = "UTF-8";
 
     private Ascensore ascensore;
     private ControlloreAscensore controllore;
@@ -66,7 +71,7 @@ public class AscensoreHttpServer {
 
         System.out.println("Server avviato su http://localhost:" + PORTA);
     }
-    
+
     public void ferma() {
         fermaSimulazioneAutomatica();
 
@@ -105,88 +110,15 @@ public class AscensoreHttpServer {
         try {
             String body = leggiBody(exchange);
             Map<String, String> parametri = leggiParametri(body);
-
             String azione = parametri.getOrDefault("azione", "passo");
 
             synchronized (this) {
-                if ("reset".equals(azione)) {
-                    fermaSimulazioneAutomatica();
-                    resettaAscensore();
-                    inviaJson(exchange, statoJson());
+                if (gestisciAzioneDiSistema(exchange, azione)) {
                     return;
                 }
 
-                if ("avviaSimulazione".equals(azione)) {
-                    avviaSimulazioneAutomatica();
-                    aggiungiEvento("Simulazione automatica avviata");
-                    inviaJson(exchange, statoJson());
-                    return;
-                }
-
-                if ("fermaSimulazione".equals(azione)) {
-                    fermaSimulazioneAutomatica();
-                    aggiungiEvento("Simulazione automatica fermata");
-                    inviaJson(exchange, statoJson());
-                    return;
-                }
-
-                InputAscensore input = new InputAscensore();
-
-                String tipoRichiestaDaRegistrare = null;
-                int pianoRichiestaDaRegistrare = 0;
-
-                int personeEntrate = 0;
-                int personeUscite = 0;
-
-                boolean guastoManuale = false;
-
-                if ("richiestaInterna".equals(azione)) {
-                    pianoRichiestaDaRegistrare = leggiIntero(parametri, "piano", 0);
-                    tipoRichiestaDaRegistrare = "Interna";
-                    input.setRichiestaInterna(pianoRichiestaDaRegistrare);
-                } else if ("chiamataSalita".equals(azione)) {
-                    pianoRichiestaDaRegistrare = leggiIntero(parametri, "piano", 0);
-                    tipoRichiestaDaRegistrare = "Salita";
-                    input.setChiamataSalita(pianoRichiestaDaRegistrare);
-                } else if ("chiamataDiscesa".equals(azione)) {
-                    pianoRichiestaDaRegistrare = leggiIntero(parametri, "piano", 0);
-                    tipoRichiestaDaRegistrare = "Discesa";
-                    input.setChiamataDiscesa(pianoRichiestaDaRegistrare);
-                } else if ("persone".equals(azione)) {
-                    personeEntrate = leggiIntero(parametri, "personeEntrate", 0);
-                    personeUscite = leggiIntero(parametri, "personeUscite", 0);
-                    input.setPersoneEntrate(personeEntrate);
-                    input.setPersoneUscite(personeUscite);
-                } else if ("guasto".equals(azione)) {
-                    guastoManuale = true;
-                    input.setEventoGuasto(true);
-                }
-
-                if (tipoRichiestaDaRegistrare != null) {
-                    if (ascensore.getStatoErrore() == StatoErrore.GUASTO) {
-                        aggiungiEvento("Richiesta ignorata: ascensore in guasto");
-                    } else {
-                        registraRichiestaVisuale(pianoRichiestaDaRegistrare, tipoRichiestaDaRegistrare);
-                        aggiungiEvento("Richiesta " + tipoRichiestaDaRegistrare.toLowerCase()
-                                + " inserita al piano " + pianoRichiestaDaRegistrare);
-                    }
-                }
-
-                if ("persone".equals(azione)) {
-                    if (personeEntrate > 0) {
-                        aggiungiEvento("Entrate " + personeEntrate + " persone");
-                    }
-                    if (personeUscite > 0) {
-                        aggiungiEvento("Uscite " + personeUscite + " persone");
-                    }
-                    if (personeEntrate == 0 && personeUscite == 0) {
-                        aggiungiEvento("Aggiornamento persone senza variazioni");
-                    }
-                }
-
-                if (guastoManuale) {
-                    aggiungiEvento("Guasto attivato manualmente");
-                }
+                InputAscensore input = costruisciInputDaAzione(azione, parametri);
+                registraEventoAzioneManuale(azione, parametri, input);
 
                 controllore.eseguiPasso(input);
                 aggiornaRichiesteServite();
@@ -195,6 +127,92 @@ public class AscensoreHttpServer {
             }
         } catch (RuntimeException e) {
             inviaJsonErrore(exchange, e.getMessage());
+        }
+    }
+
+    private boolean gestisciAzioneDiSistema(HttpExchange exchange, String azione) throws IOException {
+        if ("reset".equals(azione)) {
+            fermaSimulazioneAutomatica();
+            resettaAscensore();
+            inviaJson(exchange, statoJson());
+            return true;
+        }
+
+        if ("avviaSimulazione".equals(azione)) {
+            avviaSimulazioneAutomatica();
+            aggiungiEvento("Simulazione automatica avviata");
+            inviaJson(exchange, statoJson());
+            return true;
+        }
+
+        if ("fermaSimulazione".equals(azione)) {
+            fermaSimulazioneAutomatica();
+            aggiungiEvento("Simulazione automatica fermata");
+            inviaJson(exchange, statoJson());
+            return true;
+        }
+
+        return false;
+    }
+
+    private InputAscensore costruisciInputDaAzione(String azione, Map<String, String> parametri) {
+        InputAscensore input = new InputAscensore();
+
+        if ("richiestaInterna".equals(azione)) {
+            input.setRichiestaInterna(leggiIntero(parametri, "piano", 0));
+        } else if ("chiamataSalita".equals(azione)) {
+            input.setChiamataSalita(leggiIntero(parametri, "piano", 0));
+        } else if ("chiamataDiscesa".equals(azione)) {
+            input.setChiamataDiscesa(leggiIntero(parametri, "piano", 0));
+        } else if ("persone".equals(azione)) {
+            input.setPersoneEntrate(leggiIntero(parametri, "personeEntrate", 0));
+            input.setPersoneUscite(leggiIntero(parametri, "personeUscite", 0));
+        } else if ("guasto".equals(azione)) {
+            input.setEventoGuasto(true);
+        }
+
+        return input;
+    }
+
+    private void registraEventoAzioneManuale(
+            String azione,
+            Map<String, String> parametri,
+            InputAscensore input
+    ) {
+        if ("richiestaInterna".equals(azione)) {
+            registraEventoRichiestaManuale(leggiIntero(parametri, "piano", 0), "Interna");
+        } else if ("chiamataSalita".equals(azione)) {
+            registraEventoRichiestaManuale(leggiIntero(parametri, "piano", 0), "Salita");
+        } else if ("chiamataDiscesa".equals(azione)) {
+            registraEventoRichiestaManuale(leggiIntero(parametri, "piano", 0), "Discesa");
+        } else if ("persone".equals(azione)) {
+            registraEventoPersone(input.getPersoneEntrate(), input.getPersoneUscite());
+        } else if ("guasto".equals(azione)) {
+            aggiungiEvento("Guasto attivato manualmente");
+        }
+    }
+
+    private void registraEventoRichiestaManuale(int piano, String tipoRichiesta) {
+        if (ascensore.getStatoErrore() == StatoErrore.GUASTO) {
+            aggiungiEvento("Richiesta ignorata: ascensore in guasto");
+            return;
+        }
+
+        registraRichiestaVisuale(piano, tipoRichiesta);
+        aggiungiEvento("Richiesta " + tipoRichiesta.toLowerCase() + " inserita al piano " + piano);
+    }
+
+    private void registraEventoPersone(int personeEntrate, int personeUscite) {
+        if (personeEntrate > 0) {
+            aggiungiEvento("Entrate " + personeEntrate + " persone");
+        }
+
+        if (personeUscite > 0) {
+            aggiungiEvento("Uscite " + personeUscite + " persone");
+        }
+
+        if (personeEntrate == 0 && personeUscite == 0) {
+            aggiungiEvento("Aggiornamento persone senza variazioni");
         }
     }
 
@@ -275,22 +293,19 @@ public class AscensoreHttpServer {
 
         simulazioneAutomaticaAttiva = true;
 
-        threadSimulazione = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (simulazioneAutomaticaAttiva) {
-                    synchronized (AscensoreHttpServer.this) {
-                        InputAscensore input = generaInputCasuale();
-                        controllore.eseguiPasso(input);
-                        aggiornaRichiesteServite();
-                    }
+        threadSimulazione = new Thread(() -> {
+            while (simulazioneAutomaticaAttiva) {
+                synchronized (AscensoreHttpServer.this) {
+                    InputAscensore input = generaInputCasuale();
+                    controllore.eseguiPasso(input);
+                    aggiornaRichiesteServite();
+                }
 
-                    try {
-                        Thread.sleep(INTERVALLO_SIMULAZIONE_MS);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        simulazioneAutomaticaAttiva = false;
-                    }
+                try {
+                    Thread.sleep(INTERVALLO_SIMULAZIONE_MS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    simulazioneAutomaticaAttiva = false;
                 }
             }
         });
@@ -421,7 +436,7 @@ public class AscensoreHttpServer {
         return body.toString();
     }
 
-    private Map<String, String> leggiParametri(String body) {
+    private Map<String, String> leggiParametri(String body) throws UnsupportedEncodingException {
         Map<String, String> parametri = new HashMap<>();
 
         if (body == null || body.isEmpty()) {
@@ -442,10 +457,10 @@ public class AscensoreHttpServer {
         return parametri;
     }
 
-    private String decodifica(String valore) {
+    private String decodifica(String valore) throws UnsupportedEncodingException {
         try {
-            return URLDecoder.decode(valore, "UTF-8");
-        } catch (Exception e) {
+            return URLDecoder.decode(valore, ENCODING_UTF_8);
+        } catch (IllegalArgumentException e) {
             return valore;
         }
     }
@@ -526,25 +541,11 @@ public class AscensoreHttpServer {
     }
 
     private void inviaHtml(HttpExchange exchange, String html) throws IOException {
-        byte[] risposta = html.getBytes(StandardCharsets.UTF_8);
-
-        exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
-        exchange.sendResponseHeaders(200, risposta.length);
-
-        try (OutputStream os = exchange.getResponseBody()) {
-            os.write(risposta);
-        }
+        inviaRisposta(exchange, 200, CONTENT_TYPE_HTML, html);
     }
 
     private void inviaJson(HttpExchange exchange, String json) throws IOException {
-        byte[] risposta = json.getBytes(StandardCharsets.UTF_8);
-
-        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
-        exchange.sendResponseHeaders(200, risposta.length);
-
-        try (OutputStream os = exchange.getResponseBody()) {
-            os.write(risposta);
-        }
+        inviaRisposta(exchange, 200, CONTENT_TYPE_JSON, json);
     }
 
     private void inviaJsonErrore(HttpExchange exchange, String messaggio) throws IOException {
@@ -552,22 +553,24 @@ public class AscensoreHttpServer {
                 + "\"errore\":\"" + escapeJson(messaggio) + "\""
                 + "}";
 
-        byte[] risposta = json.getBytes(StandardCharsets.UTF_8);
-
-        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
-        exchange.sendResponseHeaders(500, risposta.length);
-
-        try (OutputStream os = exchange.getResponseBody()) {
-            os.write(risposta);
-        }
+        inviaRisposta(exchange, 500, CONTENT_TYPE_JSON, json);
     }
 
     private void inviaErroreMetodo(HttpExchange exchange) throws IOException {
         String json = "{\"errore\":\"Metodo HTTP non supportato\"}";
-        byte[] risposta = json.getBytes(StandardCharsets.UTF_8);
+        inviaRisposta(exchange, 405, CONTENT_TYPE_JSON, json);
+    }
 
-        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
-        exchange.sendResponseHeaders(405, risposta.length);
+    private void inviaRisposta(
+            HttpExchange exchange,
+            int codiceStato,
+            String contentType,
+            String contenuto
+    ) throws IOException {
+        byte[] risposta = contenuto.getBytes(StandardCharsets.UTF_8);
+
+        exchange.getResponseHeaders().set("Content-Type", contentType);
+        exchange.sendResponseHeaders(codiceStato, risposta.length);
 
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(risposta);

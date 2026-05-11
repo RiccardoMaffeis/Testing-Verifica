@@ -2,9 +2,11 @@ package progetto;
 
 public class InputAscensore {
 
-    private int richiestaInterna = Integer.MIN_VALUE;
-    private int chiamataSalita = Integer.MIN_VALUE;
-    private int chiamataDiscesa = Integer.MIN_VALUE;
+    private static final int NESSUNA_RICHIESTA = Integer.MIN_VALUE;
+
+    private int richiestaInterna = NESSUNA_RICHIESTA;
+    private int chiamataSalita = NESSUNA_RICHIESTA;
+    private int chiamataDiscesa = NESSUNA_RICHIESTA;
 
     private boolean eventoGuasto;
     private int personeEntrate;
@@ -59,14 +61,14 @@ public class InputAscensore {
     }
 
     public boolean haRichiestaInterna() {
-        return richiestaInterna != Integer.MIN_VALUE;
+        return richiestaInterna != NESSUNA_RICHIESTA;
     }
 
     public boolean haChiamataSalita() {
-        return chiamataSalita != Integer.MIN_VALUE;
+        return chiamataSalita != NESSUNA_RICHIESTA;
     }
 
     public boolean haChiamataDiscesa() {
-        return chiamataDiscesa != Integer.MIN_VALUE;
+        return chiamataDiscesa != NESSUNA_RICHIESTA;
     }
 }

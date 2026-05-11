@@ -1,17 +1,18 @@
 package test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -23,23 +24,65 @@ import web.AscensoreHttpServer;
 
 public class AscensoreWebSeleniumTest {
 
+    private static final String BASE_URL = "http://localhost:8080";
+    private static final String AZIONE_URL = BASE_URL + "/azione";
+
+    private static final String CHROME_DRIVER_ENV = "CHROMEDRIVER_PATH";
+    private static final String CHROME_DRIVER_PROPERTY = "webdriver.chrome.driver";
+    private static final String DEFAULT_CHROME_DRIVER_PATH = "drivers/chromedriver.exe";
+
+    private static final String CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
+
+    private static final int ATTESA_BREVE_MS = 300;
+    private static final int ATTESA_MEDIA_MS = 500;
+    private static final int ATTESA_SIMULAZIONE_MS = 1200;
+    private static final int ATTESA_STOP_SIMULAZIONE_MS = 700;
+
     private static AscensoreHttpServer server;
     private static WebDriver driver;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() throws Exception {
         server = new AscensoreHttpServer();
         server.avvia();
 
-        String chromeDriverPath = System.getenv("CHROMEDRIVER_PATH");
+        configuraChromeDriver();
+        avviaBrowserHeadless();
+    }
 
-        if (chromeDriverPath == null || chromeDriverPath.trim().isEmpty()) {
-            chromeDriverPath = "drivers/chromedriver.exe";
+    @BeforeEach
+    public void resetPrimaDiOgniTest() throws Exception {
+        inviaReset();
+        driver.get(BASE_URL);
+        Thread.sleep(ATTESA_BREVE_MS);
+    }
+
+    @AfterAll
+    public static void tearDown() {
+        if (driver != null) {
+            driver.quit();
+            driver = null;
         }
 
-        System.setProperty("webdriver.chrome.driver", chromeDriverPath);
+        if (server != null) {
+            server.ferma();
+            server = null;
+        }
+    }
 
+    private static void configuraChromeDriver() {
+        String chromeDriverPath = System.getenv(CHROME_DRIVER_ENV);
+
+        if (chromeDriverPath == null || chromeDriverPath.trim().isEmpty()) {
+            chromeDriverPath = DEFAULT_CHROME_DRIVER_PATH;
+        }
+
+        System.setProperty(CHROME_DRIVER_PROPERTY, chromeDriverPath);
+    }
+
+    private static void avviaBrowserHeadless() {
         ChromeOptions options = new ChromeOptions();
+
         options.addArguments("--headless");
         options.addArguments("--disable-gpu");
         options.addArguments("--no-sandbox");
@@ -49,36 +92,18 @@ public class AscensoreWebSeleniumTest {
         driver = new ChromeDriver(options);
     }
 
-    @Before
-    public void resetPrimaDiOgniTest() throws Exception {
-        inviaReset();
-        driver.get("http://localhost:8080");
-        Thread.sleep(300);
-    }
-
-    @AfterClass
-    public static void tearDown() {
-        if (driver != null) {
-            driver.quit();
-        }
-
-        if (server != null) {
-            server.ferma();
-        }
-    }
-
     private static void inviaReset() throws Exception {
-        URL url = new URL("http://localhost:8080/azione");
+        URL url = new URL(AZIONE_URL);
         HttpURLConnection connessione = (HttpURLConnection) url.openConnection();
 
         connessione.setRequestMethod("POST");
         connessione.setDoOutput(true);
-        connessione.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        connessione.setRequestProperty("Content-Type", CONTENT_TYPE_FORM);
 
         String body = "azione=reset";
 
         try (OutputStream output = connessione.getOutputStream()) {
-            output.write(body.getBytes("UTF-8"));
+            output.write(body.getBytes(StandardCharsets.UTF_8));
         }
 
         connessione.getResponseCode();
@@ -100,7 +125,7 @@ public class AscensoreWebSeleniumTest {
     public void passaggioAControlloManualeMostraPannelloManuale() throws InterruptedException {
         driver.findElement(By.id("btnModalitaManuale")).click();
 
-        Thread.sleep(500);
+        Thread.sleep(ATTESA_MEDIA_MS);
 
         WebElement pannelloManuale = driver.findElement(By.id("pannelloManuale"));
 
@@ -112,7 +137,7 @@ public class AscensoreWebSeleniumTest {
     public void richiestaInternaManualeAggiornaRichiesteAttive() throws InterruptedException {
         driver.findElement(By.id("btnModalitaManuale")).click();
 
-        Thread.sleep(500);
+        Thread.sleep(ATTESA_MEDIA_MS);
 
         WebElement inputPiano = driver.findElement(By.id("pianoInterno"));
         inputPiano.clear();
@@ -120,7 +145,7 @@ public class AscensoreWebSeleniumTest {
 
         driver.findElement(By.id("btnRichiestaInterna")).click();
 
-        Thread.sleep(500);
+        Thread.sleep(ATTESA_MEDIA_MS);
 
         String richiesteAttive = driver.findElement(By.id("richiesteAttive")).getText();
 
@@ -132,7 +157,7 @@ public class AscensoreWebSeleniumTest {
     public void inputManualiVengonoResettatiDopoInvio() throws InterruptedException {
         driver.findElement(By.id("btnModalitaManuale")).click();
 
-        Thread.sleep(500);
+        Thread.sleep(ATTESA_MEDIA_MS);
 
         WebElement inputPiano = driver.findElement(By.id("pianoInterno"));
         inputPiano.clear();
@@ -140,7 +165,7 @@ public class AscensoreWebSeleniumTest {
 
         driver.findElement(By.id("btnRichiestaInterna")).click();
 
-        Thread.sleep(500);
+        Thread.sleep(ATTESA_MEDIA_MS);
 
         assertEquals("0", driver.findElement(By.id("pianoInterno")).getAttribute("value"));
     }
@@ -149,7 +174,7 @@ public class AscensoreWebSeleniumTest {
     public void simulazioneAutomaticaDisabilitaControlloManuale() throws InterruptedException {
         driver.findElement(By.id("btnAvviaSimulazione")).click();
 
-        Thread.sleep(1200);
+        Thread.sleep(ATTESA_SIMULAZIONE_MS);
 
         assertEquals("ATTIVA", driver.findElement(By.id("simulazioneAutomatica")).getText());
 
@@ -158,7 +183,7 @@ public class AscensoreWebSeleniumTest {
 
         driver.findElement(By.id("btnFermaSimulazione")).click();
 
-        Thread.sleep(700);
+        Thread.sleep(ATTESA_STOP_SIMULAZIONE_MS);
 
         assertEquals("FERMA", driver.findElement(By.id("simulazioneAutomatica")).getText());
 
@@ -169,23 +194,23 @@ public class AscensoreWebSeleniumTest {
     public void guastoManualeAggiornaStatoErrore() throws InterruptedException {
         driver.findElement(By.id("btnModalitaManuale")).click();
 
-        Thread.sleep(500);
+        Thread.sleep(ATTESA_MEDIA_MS);
 
         driver.findElement(By.id("btnGuasto")).click();
 
-        Thread.sleep(500);
+        Thread.sleep(ATTESA_MEDIA_MS);
 
         assertEquals("GUASTO", driver.findElement(By.id("statoErrore")).getText());
 
         String log = driver.findElement(By.id("ultimiEventi")).getText();
         assertTrue(log.contains("Guasto attivato manualmente"));
     }
-    
+
     @Test
     public void overloadManualeAggiornaStatoErrore() throws InterruptedException {
         driver.findElement(By.id("btnModalitaManuale")).click();
 
-        Thread.sleep(500);
+        Thread.sleep(ATTESA_MEDIA_MS);
 
         WebElement inputPiano = driver.findElement(By.id("pianoInterno"));
         inputPiano.clear();
@@ -193,7 +218,7 @@ public class AscensoreWebSeleniumTest {
 
         driver.findElement(By.id("btnRichiestaInterna")).click();
 
-        Thread.sleep(500);
+        Thread.sleep(ATTESA_MEDIA_MS);
 
         assertEquals("APERTE", driver.findElement(By.id("statoPorte")).getText());
 
@@ -203,7 +228,7 @@ public class AscensoreWebSeleniumTest {
 
         driver.findElement(By.id("btnAggiornaPersone")).click();
 
-        Thread.sleep(500);
+        Thread.sleep(ATTESA_MEDIA_MS);
 
         assertEquals("OVERLOAD", driver.findElement(By.id("statoErrore")).getText());
         assertEquals("9", driver.findElement(By.id("numeroPersone")).getText());

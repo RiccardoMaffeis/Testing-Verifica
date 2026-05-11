@@ -32,21 +32,34 @@ public class ControlloreAscensore {
             return;
         }
 
-        if (input.haRichiestaInterna() && ascensore.pianoValido(input.getRichiestaInterna())) {
+        if (richiestaInternaValida(input)) {
             ascensore.aggiungiRichiestaInterna(input.getRichiestaInterna());
         }
 
-        if (input.haChiamataSalita()
-                && ascensore.pianoValido(input.getChiamataSalita())
-                && input.getChiamataSalita() < Ascensore.PIANO_MASSIMO) {
+        if (chiamataSalitaValida(input)) {
             ascensore.aggiungiChiamataSalita(input.getChiamataSalita());
         }
 
-        if (input.haChiamataDiscesa()
-                && ascensore.pianoValido(input.getChiamataDiscesa())
-                && input.getChiamataDiscesa() > Ascensore.PIANO_MINIMO) {
+        if (chiamataDiscesaValida(input)) {
             ascensore.aggiungiChiamataDiscesa(input.getChiamataDiscesa());
         }
+    }
+
+    private boolean richiestaInternaValida(InputAscensore input) {
+        return input.haRichiestaInterna()
+                && ascensore.pianoValido(input.getRichiestaInterna());
+    }
+
+    private boolean chiamataSalitaValida(InputAscensore input) {
+        return input.haChiamataSalita()
+                && ascensore.pianoValido(input.getChiamataSalita())
+                && input.getChiamataSalita() < Ascensore.PIANO_MASSIMO;
+    }
+
+    private boolean chiamataDiscesaValida(InputAscensore input) {
+        return input.haChiamataDiscesa()
+                && ascensore.pianoValido(input.getChiamataDiscesa())
+                && input.getChiamataDiscesa() > Ascensore.PIANO_MINIMO;
     }
 
     private void gestisciPersone(InputAscensore input) {
