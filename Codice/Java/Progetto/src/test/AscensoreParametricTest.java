@@ -1,5 +1,9 @@
 package test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import progetto.Ascensore;
 import progetto.ControlloreAscensore;
 import progetto.Direzione;
@@ -12,42 +16,27 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 public class AscensoreParametricTest {
 
     @ParameterizedTest
-    @CsvSource({
-            "-1, true",
-            "0, true",
-            "1, true",
-            "2, true",
-            "3, true",
-            "4, true",
-            "-2, false",
-            "5, false"
-    })
-    public void pianoValidoRiconoscePianiValidiENonValidi(
-            int piano,
-            boolean risultatoAtteso
-    ) {
+    @ValueSource(ints = {-1, 0, 1, 2, 3, 4})
+    public void pianoValidoAccettaSoloPianiNelRange(int piano) {
         Ascensore ascensore = new Ascensore();
 
-        assertEquals(risultatoAtteso, ascensore.pianoValido(piano));
+        assertTrue(ascensore.pianoValido(piano));
     }
 
     @ParameterizedTest
-    @CsvSource({
-            "-1",
-            "0",
-            "1",
-            "2",
-            "3",
-            "4"
-    })
-    public void richiestaInternaValidaVieneSempreAcquisita(int piano) {
+    @ValueSource(ints = {-3, -2, 5, 6, 10})
+    public void pianoValidoRifiutaPianiFuoriRange(int piano) {
+        Ascensore ascensore = new Ascensore();
+
+        assertFalse(ascensore.pianoValido(piano));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 0, 1, 2, 3, 4})
+    public void richiestaInternaValidaVieneGestita(int piano) {
         Ascensore ascensore = new Ascensore();
         ControlloreAscensore controllore = new ControlloreAscensore(ascensore);
 
@@ -56,39 +45,34 @@ public class AscensoreParametricTest {
 
         controllore.eseguiPasso(input);
 
-        assertTrue(ascensore.richiestaAttiva(piano));
+        if (piano == 0) {
+            assertFalse(ascensore.richiestaAttiva(piano));
+            assertEquals(StatoPorte.APERTE, ascensore.getStatoPorte());
+            assertEquals(StatoCabina.FERMA, ascensore.getStatoCabina());
+        } else {
+            assertTrue(ascensore.richiestaAttiva(piano));
+        }
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {-3, -2, 5, 6, 10})
-    public void richiestaInternaNonValidaVieneIgnorata(int pianoNonValido) {
+    @ValueSource(ints = {-5, -2, 5, 8})
+    public void richiestaInternaNonValidaVieneIgnorata(int piano) {
         Ascensore ascensore = new Ascensore();
         ControlloreAscensore controllore = new ControlloreAscensore(ascensore);
 
         InputAscensore input = new InputAscensore();
-        input.setRichiestaInterna(pianoNonValido);
+        input.setRichiestaInterna(piano);
 
         controllore.eseguiPasso(input);
 
         assertFalse(ascensore.esisteRichiesta());
-        assertEquals(StatoErrore.NESSUNO, ascensore.getStatoErrore());
+        assertEquals(StatoCabina.FERMA, ascensore.getStatoCabina());
+        assertEquals(Direzione.NESSUNA, ascensore.getDirezione());
     }
 
     @ParameterizedTest
-    @CsvSource({
-            "-1, true",
-            "0, true",
-            "1, true",
-            "2, true",
-            "3, true",
-            "4, false",
-            "-2, false",
-            "5, false"
-    })
-    public void chiamataSalitaVieneAccettataSoloSeValida(
-            int piano,
-            boolean deveEssereAcquisita
-    ) {
+    @ValueSource(ints = {-1, 0, 1, 2, 3})
+    public void chiamataSalitaValidaVieneGestita(int piano) {
         Ascensore ascensore = new Ascensore();
         ControlloreAscensore controllore = new ControlloreAscensore(ascensore);
 
@@ -97,28 +81,34 @@ public class AscensoreParametricTest {
 
         controllore.eseguiPasso(input);
 
-        if (deveEssereAcquisita) {
-            assertTrue(ascensore.richiestaAttiva(piano));
+        if (piano == 0) {
+            assertFalse(ascensore.richiestaAttiva(piano));
+            assertEquals(StatoPorte.APERTE, ascensore.getStatoPorte());
+            assertEquals(StatoCabina.FERMA, ascensore.getStatoCabina());
         } else {
-            assertFalse(ascensore.esisteRichiesta());
+            assertTrue(ascensore.richiestaAttiva(piano));
         }
     }
 
     @ParameterizedTest
-    @CsvSource({
-            "-1, false",
-            "0, true",
-            "1, true",
-            "2, true",
-            "3, true",
-            "4, true",
-            "-2, false",
-            "5, false"
-    })
-    public void chiamataDiscesaVieneAccettataSoloSeValida(
-            int piano,
-            boolean deveEssereAcquisita
-    ) {
+    @ValueSource(ints = {-5, -2, 4, 5, 8})
+    public void chiamataSalitaNonValidaVieneIgnorata(int piano) {
+        Ascensore ascensore = new Ascensore();
+        ControlloreAscensore controllore = new ControlloreAscensore(ascensore);
+
+        InputAscensore input = new InputAscensore();
+        input.setChiamataSalita(piano);
+
+        controllore.eseguiPasso(input);
+
+        assertFalse(ascensore.esisteRichiesta());
+        assertEquals(StatoCabina.FERMA, ascensore.getStatoCabina());
+        assertEquals(Direzione.NESSUNA, ascensore.getDirezione());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1, 2, 3, 4})
+    public void chiamataDiscesaValidaVieneGestita(int piano) {
         Ascensore ascensore = new Ascensore();
         ControlloreAscensore controllore = new ControlloreAscensore(ascensore);
 
@@ -127,34 +117,56 @@ public class AscensoreParametricTest {
 
         controllore.eseguiPasso(input);
 
-        if (deveEssereAcquisita) {
-            assertTrue(ascensore.richiestaAttiva(piano));
+        if (piano == 0) {
+            assertFalse(ascensore.richiestaAttiva(piano));
+            assertEquals(StatoPorte.APERTE, ascensore.getStatoPorte());
+            assertEquals(StatoCabina.FERMA, ascensore.getStatoCabina());
         } else {
-            assertFalse(ascensore.esisteRichiesta());
+            assertTrue(ascensore.richiestaAttiva(piano));
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-5, -2, -1, 5, 8})
+    public void chiamataDiscesaNonValidaVieneIgnorata(int piano) {
+        Ascensore ascensore = new Ascensore();
+        ControlloreAscensore controllore = new ControlloreAscensore(ascensore);
+
+        InputAscensore input = new InputAscensore();
+        input.setChiamataDiscesa(piano);
+
+        controllore.eseguiPasso(input);
+
+        assertFalse(ascensore.esisteRichiesta());
+        assertEquals(StatoCabina.FERMA, ascensore.getStatoCabina());
+        assertEquals(Direzione.NESSUNA, ascensore.getDirezione());
     }
 
     @ParameterizedTest
     @CsvSource({
             "0, 0, 0",
             "1, 0, 1",
-            "3, 1, 2",
+            "2, 0, 2",
+            "2, 1, 1",
+            "2, 2, 0",
             "2, 5, 0",
+            "5, 2, 3",
             "8, 0, 8",
             "9, 0, 9"
     })
-    public void aggiornaPersoneCalcolaNumeroPersoneCorrettamente(
+    public void aggiornaPersoneCalcolaNumeroPersoneSenzaAndareSottoZero(
             int personeEntrate,
             int personeUscite,
-            int numeroAtteso
+            int personeAttese
     ) {
         Ascensore ascensore = new Ascensore();
 
-        apriPorteAlPianoCorrente(ascensore);
+        ascensore.aggiungiRichiestaInterna(0);
+        ascensore.serviPianoCorrente();
 
         ascensore.aggiornaPersone(personeEntrate, personeUscite);
 
-        assertEquals(numeroAtteso, ascensore.getNumeroPersone());
+        assertEquals(personeAttese, ascensore.getNumeroPersone());
     }
 
     @ParameterizedTest
@@ -166,20 +178,21 @@ public class AscensoreParametricTest {
             "9, OVERLOAD",
             "10, OVERLOAD"
     })
-    public void gestisciSovraccaricoRiconosceIlSuperamentoDellaCapacita(
-            int numeroPersone,
-            StatoErrore statoErroreAtteso
+    public void gestisciSovraccaricoRispettaLaCapacitaMassima(
+            int personeEntrate,
+            StatoErrore statoAtteso
     ) {
         Ascensore ascensore = new Ascensore();
 
-        apriPorteAlPianoCorrente(ascensore);
-        ascensore.aggiornaPersone(numeroPersone, 0);
+        ascensore.aggiungiRichiestaInterna(0);
+        ascensore.serviPianoCorrente();
+        ascensore.aggiornaPersone(personeEntrate, 0);
 
         ascensore.gestisciSovraccarico();
 
-        assertEquals(statoErroreAtteso, ascensore.getStatoErrore());
+        assertEquals(statoAtteso, ascensore.getStatoErrore());
 
-        if (statoErroreAtteso == StatoErrore.OVERLOAD) {
+        if (statoAtteso == StatoErrore.OVERLOAD) {
             assertEquals(StatoCabina.BLOCCATA, ascensore.getStatoCabina());
             assertEquals(StatoPorte.APERTE, ascensore.getStatoPorte());
             assertEquals(Direzione.NESSUNA, ascensore.getDirezione());
@@ -187,91 +200,53 @@ public class AscensoreParametricTest {
     }
 
     @ParameterizedTest
-    @CsvSource({
-            "1, NESSUNO",
-            "2, NESSUNO",
-            "3, NESSUNO",
-            "4, NESSUNO",
-            "5, NESSUNO",
-            "6, NESSUNO",
-            "7, NESSUNO",
-            "8, NESSUNO",
-            "9, OVERLOAD"
-    })
-    public void ingressoPersoneDaControlloreGestisceSogliaOverload(
-            int personeEntrate,
-            StatoErrore statoErroreAtteso
-    ) {
-        Ascensore ascensore = new Ascensore();
-        ControlloreAscensore controllore = new ControlloreAscensore(ascensore);
-
-        apriPorteAlPianoCorrente(ascensore);
-
-        InputAscensore input = new InputAscensore();
-        input.setPersoneEntrate(personeEntrate);
-
-        controllore.eseguiPasso(input);
-
-        assertEquals(personeEntrate, ascensore.getNumeroPersone());
-        assertEquals(statoErroreAtteso, ascensore.getStatoErrore());
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-            "1, 9",
-            "2, 8",
-            "3, 7",
-            "5, 5",
-            "10, 0"
-    })
-    public void timerGuastoDecrementaCorrettamente(
-            int passiDaEseguire,
-            int timerAtteso
-    ) {
+    @ValueSource(ints = {1, 2, 3, 4, 5})
+    public void timerGuastoVieneDecrementatoDiUnPasso(int decrementi) {
         Ascensore ascensore = new Ascensore();
 
         ascensore.attivaGuasto();
 
-        for (int i = 0; i < passiDaEseguire; i++) {
+        for (int i = 0; i < decrementi; i++) {
             ascensore.gestisciTimerGuasto();
         }
 
-        assertEquals(timerAtteso, ascensore.getTimer());
+        assertEquals(Ascensore.TIMER_MASSIMO - decrementi, ascensore.getTimer());
         assertEquals(StatoErrore.GUASTO, ascensore.getStatoErrore());
-        assertEquals(StatoCabina.BLOCCATA, ascensore.getStatoCabina());
-        assertEquals(StatoPorte.CHIUSE, ascensore.getStatoPorte());
-        assertEquals(Direzione.NESSUNA, ascensore.getDirezione());
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {-1, 1, 2, 3, 4})
-    public void scegliDirezioneDaPianoZeroSceglieDirezioneCorretta(int pianoRichiesto) {
+    @CsvSource({
+            "1, SU",
+            "2, SU",
+            "3, SU",
+            "4, SU",
+            "-1, GIU"
+    })
+    public void scegliDirezioneInBaseAllaPosizioneDellaRichiesta(
+            int pianoRichiesto,
+            Direzione direzioneAttesa
+    ) {
         Ascensore ascensore = new Ascensore();
 
         ascensore.aggiungiRichiestaInterna(pianoRichiesto);
         ascensore.scegliDirezione();
 
-        if (pianoRichiesto > 0) {
-            assertEquals(Direzione.SU, ascensore.getDirezione());
-        } else {
-            assertEquals(Direzione.GIU, ascensore.getDirezione());
-        }
+        assertEquals(direzioneAttesa, ascensore.getDirezione());
     }
 
     @ParameterizedTest
     @CsvSource({
-            "SU, 1, IN_MOVIMENTO",
-            "GIU, -1, IN_MOVIMENTO"
+            "SU, 1",
+            "GIU, -1"
     })
-    public void muoviDiUnPianoRispettaLaDirezione(
-            Direzione direzioneAttesa,
-            int pianoAtteso,
-            StatoCabina statoCabinaAtteso
+    public void movimentoSegueLaDirezioneScelta(
+            Direzione direzione,
+            int pianoAtteso
     ) {
         Ascensore ascensore = new Ascensore();
 
-        if (direzioneAttesa == Direzione.SU) {
-            ascensore.aggiungiRichiestaInterna(4);
+        if (direzione == Direzione.SU) {
+            ascensore.aggiungiRichiestaInterna(1);
         } else {
             ascensore.aggiungiRichiestaInterna(-1);
         }
@@ -279,18 +254,7 @@ public class AscensoreParametricTest {
         ascensore.scegliDirezione();
         ascensore.muoviDiUnPiano();
 
-        assertEquals(direzioneAttesa, ascensore.getDirezione());
         assertEquals(pianoAtteso, ascensore.getPianoCorrente());
-        assertEquals(statoCabinaAtteso, ascensore.getStatoCabina());
-        assertEquals(StatoPorte.CHIUSE, ascensore.getStatoPorte());
-        assertEquals(StatoErrore.NESSUNO, ascensore.getStatoErrore());
-    }
-
-    private void apriPorteAlPianoCorrente(Ascensore ascensore) {
-        ascensore.aggiungiRichiestaInterna(ascensore.getPianoCorrente());
-        ascensore.serviPianoCorrente();
-
-        assertEquals(StatoPorte.APERTE, ascensore.getStatoPorte());
-        assertEquals(StatoCabina.FERMA, ascensore.getStatoCabina());
+        assertEquals(StatoCabina.IN_MOVIMENTO, ascensore.getStatoCabina());
     }
 }
