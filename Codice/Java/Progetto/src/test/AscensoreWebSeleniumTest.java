@@ -31,11 +31,19 @@ public class AscensoreWebSeleniumTest {
         server = new AscensoreHttpServer();
         server.avvia();
 
-        System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
+        String chromeDriverPath = System.getenv("CHROMEDRIVER_PATH");
+
+        if (chromeDriverPath == null || chromeDriverPath.trim().isEmpty()) {
+            chromeDriverPath = "drivers/chromedriver.exe";
+        }
+
+        System.setProperty("webdriver.chrome.driver", chromeDriverPath);
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless");
         options.addArguments("--disable-gpu");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--window-size=1280,900");
 
         driver = new ChromeDriver(options);
