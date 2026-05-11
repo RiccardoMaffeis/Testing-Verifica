@@ -26,6 +26,7 @@ La validazione, la verifica e la specifica del sistema sono state svolte tramite
 - implementazione Java annotata con JML;
 - verifica statica tramite ESC/OpenJML;
 - test JUnit 5 sul nucleo Java;
+- test parametrici JUnit 5 per casi limite e classi di input;
 - interfaccia web dimostrativa basata sul nucleo Java;
 - test Selenium sull'interfaccia web;
 - Continuous Integration tramite GitHub Actions.
@@ -129,6 +130,7 @@ La repository è organizzata nel seguente modo:
 │               │
 │               └── test/
 │                   ├── ControlloreAscensoreTest.java
+│                   ├── AscensoreParametricTest.java
 │                   └── AscensoreWebSeleniumTest.java
 │
 └── Documentazione/
@@ -364,13 +366,14 @@ Questa interfaccia ha quindi lo scopo di rendere più facilmente osservabile il 
 
 ## Test JUnit
 
-Il progetto contiene una suite di test JUnit 5 relativa all'implementazione Java:
+Il progetto contiene test JUnit 5 relativi all'implementazione Java del nucleo logico:
 
 ```text
 Codice/Java/Progetto/src/test/ControlloreAscensoreTest.java
+Codice/Java/Progetto/src/test/AscensoreParametricTest.java
 ```
 
-I test verificano:
+La classe `ControlloreAscensoreTest` verifica scenari funzionali completi del sistema, tra cui:
 
 - lo stato iniziale dell'ascensore;
 - il comportamento in assenza di richieste;
@@ -386,6 +389,19 @@ I test verificano:
 - il decremento del timer di guasto;
 - il ripristino dopo il guasto;
 - casi limite e input non validi.
+
+La classe `AscensoreParametricTest` contiene invece test parametrici JUnit 5, utilizzati per verificare più valori di input con la stessa logica di test. Questi test permettono di controllare in modo compatto:
+
+- piani validi e non validi;
+- richieste interne su più piani;
+- chiamate di salita e discesa valide e non valide;
+- aggiornamento del numero di persone;
+- soglie di sovraccarico;
+- decremento del timer di guasto;
+- scelta della direzione;
+- movimento coerente con la direzione scelta.
+
+I test parametrici non sostituiscono i test funzionali già presenti, ma li completano verificando classi di input e casi limite in modo più sistematico.
 
 I test sono stati utilizzati anche per analizzare la copertura del codice tramite EclEmma.
 
@@ -432,11 +448,10 @@ Il repository include un workflow di Continuous Integration basato su GitHub Act
 
 Il workflow viene eseguito automaticamente a ogni push sui branch principali e a ogni pull_request.
 
-La pipeline configura un ambiente Java, compila i sorgenti del progetto ed esegue automaticamente sia la suite di test JUnit sia i test Selenium dell'interfaccia web.
-
+La pipeline configura un ambiente Java, compila i sorgenti del progetto ed esegue automaticamente i test JUnit 5, i test parametrici e i test Selenium dell'interfaccia web.
 Poiché il progetto non utilizza Maven o Gradle, la compilazione viene eseguita direttamente tramite javac.
 
-La CI non sostituisce la verifica statica svolta con OpenJML, ma controlla automaticamente che il codice Java compili correttamente, che i test JUnit continuino a passare e che l'interfaccia web rimanga eseguibile e testabile tramite Selenium.
+La CI non sostituisce la verifica statica svolta con OpenJML, ma controlla automaticamente che il codice Java compili correttamente, che i test JUnit 5, inclusi quelli parametrici, continuino a passare e che l'interfaccia web rimanga eseguibile e testabile tramite Selenium.
 
 Poiché i test Selenium richiedono un browser, la pipeline configura Chrome e ChromeDriver ed esegue tali test in modalità headless. In questo modo anche l'interfaccia web dimostrativa viene verificata automaticamente nell'ambiente di Continuous Integration.
 
@@ -497,6 +512,6 @@ Il model checking con AsmetaSMV permette di verificare formalmente proprietà CT
 
 La successiva implementazione Java + JML realizza il nucleo logico principale del sistema in una forma eseguibile. Le specifiche JML permettono di formalizzare e controllare proprietà di sicurezza e coerenza dello stato, come la validità del piano corrente, la gestione degli errori, il movimento solo con porte chiuse e la corretta gestione delle richieste.
 
-I test JUnit completano la verifica della parte implementativa, controllando il comportamento del controllore Java nei casi ordinari, nei casi anomali e nei principali casi limite.
+I test JUnit 5, inclusi i test parametrici, completano la verifica della parte implementativa, controllando il comportamento del controllore Java nei casi ordinari, nei casi anomali, nei principali casi limite e su più classi di input.
 
-Nel complesso, il progetto integra modellazione ASM, validazione tramite scenari AVALLA e ATGT, model checking con AsmetaSMV, specifica formale tramite JML, verifica statica con OpenJML, test automatici JUnit 5, test Selenium dell'interfaccia web e Continuous Integration tramite GitHub Actions.
+Nel complesso, il progetto integra modellazione ASM, validazione tramite scenari AVALLA e ATGT, model checking con AsmetaSMV, specifica formale tramite JML, verifica statica con OpenJML, test automatici JUnit 5, test parametrici, test Selenium dell'interfaccia web e Continuous Integration tramite GitHub Actions.
