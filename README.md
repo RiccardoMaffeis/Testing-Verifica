@@ -4,7 +4,7 @@
 
 Questo repository contiene il modello ASM di un sistema di ascensore a più piani con un'unica cabina, una successiva implementazione Java annotata con specifiche JML e una semplice interfaccia web dimostrativa per l'esecuzione e l'osservazione del nucleo Java.
 
-Il progetto comprende quindi sia la modellazione formale astratta del sistema, sia una versione implementativa del nucleo logico dell'ascensore, utilizzata per la specifica e la verifica tramite contratti JML e test JUnit. A supporto della parte implementativa è stata inoltre realizzata una piccola interfaccia web, utilizzata per simulare e visualizzare dinamicamente il comportamento del sistema.
+Il progetto comprende quindi sia la modellazione formale astratta del sistema, sia una versione implementativa del nucleo logico dell'ascensore, utilizzata per la specifica e la verifica tramite contratti JML, test JUnit e test Selenium.
 
 ---
 
@@ -25,7 +25,7 @@ La validazione, la verifica e la specifica del sistema sono state svolte tramite
 - model checking con AsmetaSMV;
 - implementazione Java annotata con JML;
 - verifica statica tramite ESC/OpenJML;
-- test JUnit sul nucleo Java;
+- test JUnit 5 sul nucleo Java;
 - interfaccia web dimostrativa basata sul nucleo Java;
 - test Selenium sull'interfaccia web;
 - Continuous Integration tramite GitHub Actions.
@@ -108,6 +108,11 @@ La repository è organizzata nel seguente modo:
 │           │       ├── okhttp-3.11.0.jar
 │           │       └── okio-1.14.0.jar
 │           │
+│           ├── webapp/
+│           │   ├── index.html
+│           │   ├── style.css
+│           │   └── script.js
+│           │
 │           └── src/
 │               │
 │               ├── progetto/
@@ -131,7 +136,10 @@ La repository è organizzata nel seguente modo:
     ├── AVALLA, ATGT and AsmetaSMV Validation Report.md
     ├── AVALLA, ATGT and AsmetaSMV Validation Report.pdf
     ├── Implementazione Java JML.md
-    └── Implementazione Java JML.pdf
+    ├── Implementazione Java JML.pdf
+    └── Analisi statica/
+        ├── Analisi statica_1.pdf
+        └── Analisi statica_2.pdf
 ```
 
 ---
@@ -322,11 +330,21 @@ Codice/Java/Progetto/src/progetto/InputAscensore.java
 
 Oltre alle classi del nucleo logico, il progetto include una semplice interfaccia web dimostrativa basata su `HttpServer` di Java.
 
-Il file principale è:
+Il file principale del server è:
 
 ```text
 Codice/Java/Progetto/src/web/AscensoreHttpServer.java
 ```
+
+La parte statica dell'interfaccia è stata separata in tre file distinti:
+
+```text
+Codice/Java/Progetto/webapp/index.html
+Codice/Java/Progetto/webapp/style.css
+Codice/Java/Progetto/webapp/script.js
+```
+
+Questa suddivisione separa la struttura della pagina, lo stile grafico e la logica JavaScript, rendendo il codice più leggibile, manutenibile e coerente con l'analisi statica svolta sul progetto.
 
 L'interfaccia web non introduce una nuova logica di gestione dell'ascensore, ma utilizza direttamente le classi già presenti nel progetto:
 
@@ -346,7 +364,7 @@ Questa interfaccia ha quindi lo scopo di rendere più facilmente osservabile il 
 
 ## Test JUnit
 
-Il progetto contiene una suite di test JUnit relativa all'implementazione Java:
+Il progetto contiene una suite di test JUnit 5 relativa all'implementazione Java:
 
 ```text
 Codice/Java/Progetto/src/test/ControlloreAscensoreTest.java
@@ -400,6 +418,8 @@ In particolare, controllano:
 
 I test Selenium avviano automaticamente il server web, eseguono le interazioni sulla pagina tramite browser e arrestano il server al termine dell'esecuzione.
 
+I test sono stati aggiornati per utilizzare attese esplicite tramite `WebDriverWait`, evitando l'uso di attese fisse basate su `Thread.sleep`. Questo rende i test più robusti sia in locale sia nell'ambiente di Continuous Integration, dove i tempi di caricamento della pagina possono variare.
+
 ---
 
 ## Continuous Integration
@@ -419,6 +439,8 @@ Poiché il progetto non utilizza Maven o Gradle, la compilazione viene eseguita 
 La CI non sostituisce la verifica statica svolta con OpenJML, ma controlla automaticamente che il codice Java compili correttamente, che i test JUnit continuino a passare e che l'interfaccia web rimanga eseguibile e testabile tramite Selenium.
 
 Poiché i test Selenium richiedono un browser, la pipeline configura Chrome e ChromeDriver ed esegue tali test in modalità headless. In questo modo anche l'interfaccia web dimostrativa viene verificata automaticamente nell'ambiente di Continuous Integration.
+
+Nel workflow viene inoltre impostato il percorso di ChromeDriver tramite la variabile d'ambiente `CHROMEDRIVER_PATH`, in modo da rendere i test Selenium eseguibili anche su ambiente Linux headless.
 
 ---
 
@@ -446,7 +468,7 @@ Alcuni metodi con logica decisionale più articolata possono richiedere ulterior
 
 ## Documentazione
 
-Il risultato completo della modellazione, validazione, verifica e implementazione è documentato nei file:
+Il risultato completo della modellazione, validazione, verifica, implementazione e analisi statica è documentato nei file:
 
 ```text
 Documentazione/Requisiti e Proprieta.pdf
@@ -454,7 +476,12 @@ Documentazione/AVALLA, ATGT and AsmetaSMV Validation Report.md
 Documentazione/AVALLA, ATGT and AsmetaSMV Validation Report.pdf
 Documentazione/Implementazione Java JML.md
 Documentazione/Implementazione Java JML.pdf
+Documentazione/Analisi statica/Analisi statica_1.pdf
+Documentazione/Analisi statica/Analisi statica_2.pdf
 ```
+
+La cartella `Documentazione/Analisi statica/` raccoglie i report relativi all'analisi statica del codice Java. 
+I due documenti mostrano l'evoluzione del progetto: dalla prima analisi del nucleo Java annotato con JML fino alla versione aggiornata con interfaccia web separata, test Selenium più robusti e integrazione nella pipeline CI.
 
 ---
 
@@ -472,4 +499,4 @@ La successiva implementazione Java + JML realizza il nucleo logico principale de
 
 I test JUnit completano la verifica della parte implementativa, controllando il comportamento del controllore Java nei casi ordinari, nei casi anomali e nei principali casi limite.
 
-Nel complesso, il progetto integra modellazione ASM, validazione tramite AVALLA, generazione automatica di scenari con ATGT, model checking con AsmetaSMV, specifica formale del codice Java tramite JML, test automatici JUnit, interfaccia web dimostrativa testata tramite Selenium e Continuous Integration tramite GitHub Actions.
+Nel complesso, il progetto integra modellazione ASM, validazione tramite scenari AVALLA e ATGT, model checking con AsmetaSMV, specifica formale tramite JML, verifica statica con OpenJML, test automatici JUnit 5, test Selenium dell'interfaccia web e Continuous Integration tramite GitHub Actions.
