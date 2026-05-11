@@ -34,6 +34,7 @@ public class AscensoreHttpServer {
 
     private Ascensore ascensore;
     private ControlloreAscensore controllore;
+    private HttpServer server;
 
     private final Random random = new Random();
 
@@ -53,8 +54,8 @@ public class AscensoreHttpServer {
         applicazione.avvia();
     }
 
-    private void avvia() throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(PORTA), 0);
+    public void avvia() throws IOException {
+        server = HttpServer.create(new InetSocketAddress(PORTA), 0);
 
         server.createContext("/", this::gestisciPagina);
         server.createContext("/stato", this::gestisciStato);
@@ -64,6 +65,15 @@ public class AscensoreHttpServer {
         server.start();
 
         System.out.println("Server avviato su http://localhost:" + PORTA);
+    }
+    
+    public void ferma() {
+        fermaSimulazioneAutomatica();
+
+        if (server != null) {
+            server.stop(0);
+            server = null;
+        }
     }
 
     private void gestisciPagina(HttpExchange exchange) throws IOException {
