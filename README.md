@@ -14,7 +14,7 @@ L'obiettivo del progetto è modellare formalmente un ascensore mediante Abstract
 
 La parte ASM descrive il comportamento astratto del sistema e viene validata tramite scenari AVALLA, scenari generati automaticamente con ATGT e proprietà temporali verificate con AsmetaSMV.
 
-La parte Java + JML fornisce invece una versione eseguibile del nucleo logico, specificando formalmente invarianti, precondizioni e postcondizioni dei principali metodi. A questa si aggiungono test JUnit per verificare il comportamento operativo del controllore.
+La parte Java + JML fornisce invece una versione eseguibile del nucleo logico, specificando formalmente invarianti, precondizioni e postcondizioni dei principali metodi. A questa si aggiungono test JUnit per verificare il comportamento operativo del controllore e test Selenium per verificare l'interfaccia web dimostrativa.
 
 Il sistema rappresenta una cabina che serve più piani dell'edificio, gestendo richieste, movimento, porte, sovraccarico e guasti.
 
@@ -27,6 +27,7 @@ La validazione, la verifica e la specifica del sistema sono state svolte tramite
 - verifica statica tramite ESC/OpenJML;
 - test JUnit sul nucleo Java;
 - interfaccia web dimostrativa basata sul nucleo Java;
+- test Selenium sull'interfaccia web;
 - Continuous Integration tramite GitHub Actions.
 
 ---
@@ -95,6 +96,18 @@ La repository è organizzata nel seguente modo:
 │   └── Java/
 │       └── Progetto/
 │           │
+│           ├── drivers/
+│           │   └── chromedriver.exe
+│           │
+│           ├── lib/
+│           │   └── selenium/
+│           │       ├── client-combined-3.141.59.jar
+│           │       ├── byte-buddy-1.8.15.jar
+│           │       ├── commons-exec-1.3.jar
+│           │       ├── guava-25.0-jre.jar
+│           │       ├── okhttp-3.11.0.jar
+│           │       └── okio-1.14.0.jar
+│           │
 │           └── src/
 │               │
 │               ├── progetto/
@@ -110,7 +123,8 @@ La repository è organizzata nel seguente modo:
 │               │   └── AscensoreHttpServer.java
 │               │
 │               └── test/
-│                   └── ControlloreAscensoreTest.java
+│                   ├── ControlloreAscensoreTest.java
+│                   └── AscensoreWebSeleniumTest.java
 │
 └── Documentazione/
     ├── Requisiti e Proprieta.pdf
@@ -359,6 +373,35 @@ I test sono stati utilizzati anche per analizzare la copertura del codice tramit
 
 ---
 
+## Test Selenium
+
+Oltre ai test JUnit sul nucleo logico, il progetto include una classe di test Selenium per verificare il corretto funzionamento dell'interfaccia web dimostrativa.
+
+Il file principale è:
+
+```text
+Codice/Java/Progetto/src/test/AscensoreWebSeleniumTest.java
+```
+
+I test Selenium verificano il collegamento tra pagina web, server HTTP e nucleo logico Java.
+
+In particolare, controllano:
+
+- apertura corretta della pagina web;
+- visualizzazione dello stato iniziale dell'ascensore;
+- passaggio alla modalità di controllo manuale;
+- inserimento di richieste tramite interfaccia;
+- aggiornamento della sezione delle richieste attive;
+- reset dei campi di input manuali dopo l'invio;
+- avvio e arresto della simulazione automatica;
+- disabilitazione del controllo manuale durante la simulazione automatica;
+- visualizzazione dello stato di guasto;
+- visualizzazione dello stato di sovraccarico.
+
+I test Selenium avviano automaticamente il server web, eseguono le interazioni sulla pagina tramite browser e arrestano il server al termine dell'esecuzione.
+
+---
+
 ## Continuous Integration
 
 Il repository include un workflow di Continuous Integration basato su GitHub Actions:
@@ -369,11 +412,13 @@ Il repository include un workflow di Continuous Integration basato su GitHub Act
 
 Il workflow viene eseguito automaticamente a ogni push sui branch principali e a ogni pull_request.
 
-La pipeline configura un ambiente Java, compila i sorgenti del progetto ed esegue automaticamente la suite di test JUnit.
+La pipeline configura un ambiente Java, compila i sorgenti del progetto ed esegue automaticamente sia la suite di test JUnit sia i test Selenium dell'interfaccia web.
 
 Poiché il progetto non utilizza Maven o Gradle, la compilazione viene eseguita direttamente tramite javac.
 
-La CI non sostituisce la verifica statica svolta con OpenJML, ma controlla automaticamente che il codice Java compili correttamente e che i test JUnit continuino a passare dopo ogni modifica.
+La CI non sostituisce la verifica statica svolta con OpenJML, ma controlla automaticamente che il codice Java compili correttamente, che i test JUnit continuino a passare e che l'interfaccia web rimanga eseguibile e testabile tramite Selenium.
+
+Poiché i test Selenium richiedono un browser, la pipeline configura Chrome e ChromeDriver ed esegue tali test in modalità headless. In questo modo anche l'interfaccia web dimostrativa viene verificata automaticamente nell'ambiente di Continuous Integration.
 
 ---
 
@@ -427,4 +472,4 @@ La successiva implementazione Java + JML realizza il nucleo logico principale de
 
 I test JUnit completano la verifica della parte implementativa, controllando il comportamento del controllore Java nei casi ordinari, nei casi anomali e nei principali casi limite.
 
-Nel complesso, il progetto integra modellazione ASM, validazione tramite AVALLA, generazione automatica di scenari con ATGT, model checking con AsmetaSMV, specifica formale del codice Java tramite JML, test automatici JUnit, interfaccia web dimostrativa e Continuous Integration tramite GitHub Actions.
+Nel complesso, il progetto integra modellazione ASM, validazione tramite AVALLA, generazione automatica di scenari con ATGT, model checking con AsmetaSMV, specifica formale del codice Java tramite JML, test automatici JUnit, interfaccia web dimostrativa testata tramite Selenium e Continuous Integration tramite GitHub Actions.
