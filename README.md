@@ -2,9 +2,9 @@
 
 ## Progetto ASM - Sistema di Ascensore
 
-Questo repository contiene il modello ASM di un sistema di ascensore a più piani con un'unica cabina e una successiva implementazione Java annotata con specifiche JML.
+Questo repository contiene il modello ASM di un sistema di ascensore a più piani con un'unica cabina, una successiva implementazione Java annotata con specifiche JML e una semplice interfaccia web dimostrativa per l'esecuzione e l'osservazione del nucleo Java.
 
-Il progetto comprende quindi sia la modellazione formale astratta del sistema, sia una versione implementativa del nucleo logico dell'ascensore, utilizzata per la specifica e la verifica tramite contratti JML e test JUnit.
+Il progetto comprende quindi sia la modellazione formale astratta del sistema, sia una versione implementativa del nucleo logico dell'ascensore, utilizzata per la specifica e la verifica tramite contratti JML e test JUnit. A supporto della parte implementativa è stata inoltre realizzata una piccola interfaccia web, utilizzata per simulare e visualizzare dinamicamente il comportamento del sistema.
 
 ---
 
@@ -26,6 +26,7 @@ La validazione, la verifica e la specifica del sistema sono state svolte tramite
 - implementazione Java annotata con JML;
 - verifica statica tramite ESC/OpenJML;
 - test JUnit sul nucleo Java;
+- interfaccia web dimostrativa basata sul nucleo Java;
 - Continuous Integration tramite GitHub Actions.
 
 ---
@@ -104,6 +105,9 @@ La repository è organizzata nel seguente modo:
 │               │   ├── StatoCabina.java
 │               │   ├── StatoPorte.java
 │               │   └── StatoErrore.java
+│               │
+│               ├── web/
+│               │   └── AscensoreHttpServer.java
 │               │
 │               └── test/
 │                   └── ControlloreAscensoreTest.java
@@ -300,6 +304,30 @@ Codice/Java/Progetto/src/progetto/InputAscensore.java
 
 ---
 
+## Interfaccia web dimostrativa
+
+Oltre alle classi del nucleo logico, il progetto include una semplice interfaccia web dimostrativa basata su `HttpServer` di Java.
+
+Il file principale è:
+
+```text
+Codice/Java/Progetto/src/web/AscensoreHttpServer.java
+```
+
+L'interfaccia web non introduce una nuova logica di gestione dell'ascensore, ma utilizza direttamente le classi già presenti nel progetto:
+
+```java
+Ascensore
+ControlloreAscensore
+InputAscensore
+```
+
+In questo modo la simulazione web rimane coerente con l'implementazione Java verificata tramite JML e test JUnit.
+
+Questa interfaccia ha quindi lo scopo di rendere più facilmente osservabile il comportamento del nucleo Java, senza sostituire le attività di verifica formale e di testing già presenti nel progetto.
+
+---
+
 ## Test JUnit
 
 Il progetto contiene una suite di test JUnit relativa all'implementazione Java:
@@ -397,4 +425,4 @@ La successiva implementazione Java + JML realizza il nucleo logico principale de
 
 I test JUnit completano la verifica della parte implementativa, controllando il comportamento del controllore Java nei casi ordinari, nei casi anomali e nei principali casi limite.
 
-Nel complesso, il progetto integra modellazione ASM, validazione tramite AVALLA, generazione automatica di scenari con ATGT, model checking con AsmetaSMV, specifica formale del codice Java tramite JML, test automatici JUnit e Continuous Integration tramite GitHub Actions.
+Nel complesso, il progetto integra modellazione ASM, validazione tramite AVALLA, generazione automatica di scenari con ATGT, model checking con AsmetaSMV, specifica formale del codice Java tramite JML, test automatici JUnit, interfaccia web dimostrativa e Continuous Integration tramite GitHub Actions.
