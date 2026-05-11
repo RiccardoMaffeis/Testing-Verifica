@@ -316,13 +316,15 @@ Codice/Java/Progetto/src/web/AscensoreHttpServer.java
 
 L'interfaccia web non introduce una nuova logica di gestione dell'ascensore, ma utilizza direttamente le classi già presenti nel progetto:
 
-```java
+```text
 Ascensore
 ControlloreAscensore
 InputAscensore
 ```
 
 In questo modo la simulazione web rimane coerente con l'implementazione Java verificata tramite JML e test JUnit.
+
+L'interfaccia permette di eseguire il sistema in modalità automatica o manuale, mostrando lo stato corrente dell'ascensore, le richieste attive e un log degli eventi principali.
 
 Questa interfaccia ha quindi lo scopo di rendere più facilmente osservabile il comportamento del nucleo Java, senza sostituire le attività di verifica formale e di testing già presenti nel progetto.
 
