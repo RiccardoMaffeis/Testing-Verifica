@@ -137,8 +137,8 @@ La repository è organizzata nel seguente modo:
     ├── Requisiti e Proprieta.pdf
     ├── AVALLA, ATGT and AsmetaSMV Validation Report.md
     ├── AVALLA, ATGT and AsmetaSMV Validation Report.pdf
-    ├── Implementazione Java JML.md
-    ├── Implementazione Java JML.pdf
+    ├── Implementazione Java e JML.md
+    ├── Implementazione Java e JML.pdf
     └── Analisi statica/
         ├── Analisi statica_1.pdf
         └── Analisi statica_2.pdf
@@ -489,8 +489,8 @@ Il risultato completo della modellazione, validazione, verifica, implementazione
 Documentazione/Requisiti e Proprieta.pdf
 Documentazione/AVALLA, ATGT and AsmetaSMV Validation Report.md
 Documentazione/AVALLA, ATGT and AsmetaSMV Validation Report.pdf
-Documentazione/Implementazione Java JML.md
-Documentazione/Implementazione Java JML.pdf
+Documentazione/Implementazione Java e JML.md
+Documentazione/Implementazione Java e JML.pdf
 Documentazione/Analisi statica/Analisi statica_1.pdf
 Documentazione/Analisi statica/Analisi statica_2.pdf
 ```
