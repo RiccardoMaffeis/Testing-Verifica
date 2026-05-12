@@ -135,6 +135,7 @@ La repository è organizzata nel seguente modo:
 │
 └── Documentazione/
     ├── Requisiti e Proprieta.pdf
+    ├── Guida utilizzo ascensore.pdf
     ├── AVALLA, ATGT and AsmetaSMV Validation Report.md
     ├── AVALLA, ATGT and AsmetaSMV Validation Report.pdf
     ├── Implementazione Java e JML.md
@@ -487,6 +488,7 @@ Il risultato completo della modellazione, validazione, verifica, implementazione
 
 ```text
 Documentazione/Requisiti e Proprieta.pdf
+Documentazione/Guida utilizzo ascensore.pdf
 Documentazione/AVALLA, ATGT and AsmetaSMV Validation Report.md
 Documentazione/AVALLA, ATGT and AsmetaSMV Validation Report.pdf
 Documentazione/Implementazione Java e JML.md
@@ -494,9 +496,6 @@ Documentazione/Implementazione Java e JML.pdf
 Documentazione/Analisi statica/Analisi statica_1.pdf
 Documentazione/Analisi statica/Analisi statica_2.pdf
 ```
-
-La cartella `Documentazione/Analisi statica/` raccoglie i report relativi all'analisi statica del codice Java. 
-I due documenti mostrano l'evoluzione del progetto: dalla prima analisi del nucleo Java annotato con JML fino alla versione aggiornata con interfaccia web separata, test Selenium più robusti e integrazione nella pipeline CI.
 
 ---
 
