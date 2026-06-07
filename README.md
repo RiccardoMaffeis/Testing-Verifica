@@ -2,34 +2,21 @@
 
 ## Progetto ASM - Sistema di Ascensore
 
-Questo repository contiene il modello ASM di un sistema di ascensore a più piani con un'unica cabina, una successiva implementazione Java annotata con specifiche JML e una semplice interfaccia web dimostrativa per l'esecuzione e l'osservazione del nucleo Java.
+Questo repository contiene il modello ASM di un sistema di ascensore a più piani, la relativa implementazione Java annotata con specifiche JML e una semplice interfaccia web dimostrativa.
 
-Il progetto comprende quindi sia la modellazione formale astratta del sistema, sia una versione implementativa del nucleo logico dell'ascensore, utilizzata per la specifica e la verifica tramite contratti JML, test JUnit e test Selenium.
+Il progetto integra modellazione formale, validazione tramite scenari AVALLA e ATGT, model checking con AsmetaSMV, verifica statica con OpenJML, test JUnit 5, test Selenium e Continuous Integration tramite GitHub Actions.
 
 ---
 
 ## Obiettivo
 
-L'obiettivo del progetto è modellare formalmente un ascensore mediante Abstract State Machines, verificarne il comportamento tramite gli strumenti dell'ambiente ASMETA e realizzare una versione Java del nucleo logico annotata con specifiche JML.
+L'obiettivo del progetto è modellare e verificare il comportamento di un ascensore mediante Abstract State Machines e realizzare una versione Java eseguibile del nucleo logico.
 
-La parte ASM descrive il comportamento astratto del sistema e viene validata tramite scenari AVALLA, scenari generati automaticamente con ATGT e proprietà temporali verificate con AsmetaSMV.
+Il sistema gestisce richieste interne ed esterne, movimento della cabina, apertura e chiusura delle porte, condizioni di sovraccarico e guasto tecnico.
 
-La parte Java + JML fornisce invece una versione eseguibile del nucleo logico, specificando formalmente invarianti, precondizioni e postcondizioni dei principali metodi. A questa si aggiungono test JUnit per verificare il comportamento operativo del controllore e test Selenium per verificare l'interfaccia web dimostrativa.
+La parte ASM descrive il comportamento astratto del sistema ed è validata tramite scenari AVALLA manuali, scenari generati automaticamente con ATGT e proprietà CTL verificate con AsmetaSMV.
 
-Il sistema rappresenta una cabina che serve più piani dell'edificio, gestendo richieste, movimento, porte, sovraccarico e guasti.
-
-La validazione, la verifica e la specifica del sistema sono state svolte tramite:
-
-- scenari AVALLA manuali;
-- scenari generati automaticamente con ATGT;
-- model checking con AsmetaSMV;
-- implementazione Java annotata con JML;
-- verifica statica tramite ESC/OpenJML;
-- test JUnit 5 sul nucleo Java;
-- test parametrici JUnit 5 per casi limite e classi di input;
-- interfaccia web dimostrativa basata sul nucleo Java;
-- test Selenium sull'interfaccia web;
-- Continuous Integration tramite GitHub Actions.
+La parte Java + JML rappresenta invece una realizzazione eseguibile del nucleo logico, specificata tramite invarianti, precondizioni e postcondizioni. Il comportamento implementativo è verificato tramite test JUnit 5, test parametrici, test Selenium sull'interfaccia web e Continuous Integration.
 
 ---
 
@@ -37,19 +24,15 @@ La validazione, la verifica e la specifica del sistema sono state svolte tramite
 
 Il sistema gestisce:
 
-- richieste interne dalla cabina;
-- chiamate esterne dai piani;
+- richieste interne dalla cabina e chiamate esterne dai piani;
 - memorizzazione delle richieste attive;
 - scelta della direzione di movimento;
 - movimento sicuro solo con porte chiuse;
 - apertura delle porte al piano richiesto;
 - stato di inattività in assenza di richieste;
-- sovraccarico della cabina;
-- risoluzione del sovraccarico;
+- sovraccarico della cabina e successiva risoluzione;
 - guasto tecnico con timer di ripristino;
-- blocco delle nuove richieste durante il guasto;
-- conservazione delle richieste già acquisite durante condizioni anomale;
-- ripristino del sistema dopo un guasto.
+- conservazione delle richieste già acquisite durante condizioni anomale.
 
 ---
 
@@ -348,13 +331,7 @@ Codice/Java/Progetto/webapp/script.js
 
 Questa suddivisione separa la struttura della pagina, lo stile grafico e la logica JavaScript, rendendo il codice più leggibile, manutenibile e coerente con l'analisi statica svolta sul progetto.
 
-L'interfaccia web non introduce una nuova logica di gestione dell'ascensore, ma utilizza direttamente le classi già presenti nel progetto:
-
-```text
-Ascensore
-ControlloreAscensore
-InputAscensore
-```
+L'interfaccia web non introduce una nuova logica di gestione dell'ascensore, ma utilizza direttamente le classi già presenti nel progetto.
 
 In questo modo la simulazione web rimane coerente con l'implementazione Java verificata tramite JML e test JUnit.
 
@@ -371,39 +348,14 @@ Il progetto contiene test JUnit 5 relativi all'implementazione Java del nucleo l
 ```text
 Codice/Java/Progetto/src/test/ControlloreAscensoreTest.java
 Codice/Java/Progetto/src/test/AscensoreParametricTest.java
+Codice/Java/Progetto/src/test/AscensoreAvallaAtgtTest.java
 ```
 
-La classe `ControlloreAscensoreTest` verifica scenari funzionali completi del sistema, tra cui:
+La classe `ControlloreAscensoreTest` verifica scenari funzionali completi, come stato iniziale, acquisizione delle richieste, movimento della cabina, apertura e chiusura delle porte, gestione del sovraccarico, gestione del guasto e ripristino del sistema.
 
-- lo stato iniziale dell'ascensore;
-- il comportamento in assenza di richieste;
-- l'acquisizione di richieste interne ed esterne;
-- il movimento verso piani superiori e inferiori;
-- il servizio del piano richiesto;
-- la chiusura delle porte dopo il servizio;
-- la gestione del sovraccarico;
-- la risoluzione del sovraccarico;
-- il comportamento durante il guasto;
-- il blocco delle nuove richieste durante il guasto;
-- la conservazione delle richieste già acquisite;
-- il decremento del timer di guasto;
-- il ripristino dopo il guasto;
-- casi limite e input non validi.
+La classe `AscensoreParametricTest` contiene test parametrici usati per verificare più valori di input con la stessa logica di test, in particolare piani validi e non validi, richieste interne ed esterne, soglie di sovraccarico, timer di guasto, scelta della direzione e movimento della cabina.
 
-La classe `AscensoreParametricTest` contiene invece test parametrici JUnit 5, utilizzati per verificare più valori di input con la stessa logica di test. Questi test permettono di controllare in modo compatto:
-
-- piani validi e non validi;
-- richieste interne su più piani;
-- chiamate di salita e discesa valide e non valide;
-- aggiornamento del numero di persone;
-- soglie di sovraccarico;
-- decremento del timer di guasto;
-- scelta della direzione;
-- movimento coerente con la direzione scelta.
-
-I test parametrici non sostituiscono i test funzionali già presenti, ma li completano verificando classi di input e casi limite in modo più sistematico.
-
-I test sono stati utilizzati anche per analizzare la copertura del codice tramite EclEmma.
+La classe `AscensoreAvallaAtgtTest` contiene test JUnit derivati da alcuni scenari AVALLA generati automaticamente tramite ATGT. Questi test mantengono separati i casi funzionali scritti manualmente dai casi ottenuti a partire dalla generazione automatica.
 
 ---
 
@@ -453,7 +405,7 @@ Poiché il progetto non utilizza Maven o Gradle, la compilazione viene eseguita 
 
 La CI non sostituisce la verifica statica svolta con OpenJML, ma controlla automaticamente che il codice Java compili correttamente, che i test JUnit 5, inclusi quelli parametrici, continuino a passare e che l'interfaccia web rimanga eseguibile e testabile tramite Selenium.
 
-Poiché i test Selenium richiedono un browser, la pipeline configura Chrome e ChromeDriver ed esegue tali test in modalità headless. In questo modo anche l'interfaccia web dimostrativa viene verificata automaticamente nell'ambiente di Continuous Integration.
+Poiché i test Selenium richiedono un browser, la pipeline configura Chrome e ChromeDriver ed esegue tali test in modalità headless, cioè senza apertura visibile del browser. In questo modo anche l'interfaccia web dimostrativa viene verificata automaticamente nell'ambiente di Continuous Integration.
 
 Nel workflow viene inoltre impostato il percorso di ChromeDriver tramite la variabile d'ambiente `CHROMEDRIVER_PATH`, in modo da rendere i test Selenium eseguibili anche su ambiente Linux headless.
 
@@ -488,9 +440,7 @@ Il risultato completo della modellazione, validazione, verifica, implementazione
 ```text
 Documentazione/Requisiti e Proprieta.pdf
 Documentazione/Guida utilizzo ascensore.pdf
-Documentazione/AVALLA, ATGT and AsmetaSMV Validation Report.md
 Documentazione/AVALLA, ATGT and AsmetaSMV Validation Report.pdf
-Documentazione/Implementazione Java e JML.md
 Documentazione/Implementazione Java e JML.pdf
 Documentazione/Analisi statica/Analisi statica_1.pdf
 Documentazione/Analisi statica/Analisi statica_2.pdf
@@ -500,16 +450,10 @@ Documentazione/Analisi statica/Analisi statica_2.pdf
 
 ## Esito complessivo
 
-La validazione tramite scenari AVALLA manuali, scenari generati automaticamente con ATGT e model checking con AsmetaSMV conferma la coerenza del modello ASM rispetto ai requisiti funzionali e alle principali proprietà di sicurezza considerate.
+Nel complesso, il progetto mostra un percorso completo di modellazione, implementazione e verifica del sistema ascensore.
 
-Gli scenari AVALLA manuali permettono di verificare casi specifici e facilmente interpretabili.
+Il modello ASM è stato validato tramite scenari AVALLA manuali e scenari generati automaticamente con ATGT. Inoltre, una versione ridotta del modello è stata utilizzata per il model checking con AsmetaSMV, verificando proprietà CTL relative alla sicurezza del movimento, alla gestione delle porte, al guasto e alla raggiungibilità degli stati principali.
 
-Gli scenari generati con ATGT permettono di esplorare automaticamente ulteriori configurazioni del modello.
-
-Il model checking con AsmetaSMV permette di verificare formalmente proprietà CTL relative alla sicurezza del movimento, alla gestione delle porte, allo stato di guasto e alla raggiungibilità degli stati principali.
-
-La successiva implementazione Java + JML realizza il nucleo logico principale del sistema in una forma eseguibile. Le specifiche JML permettono di formalizzare e controllare proprietà di sicurezza e coerenza dello stato, come la validità del piano corrente, la gestione degli errori, il movimento solo con porte chiuse e la corretta gestione delle richieste.
-
-I test JUnit 5, inclusi i test parametrici, completano la verifica della parte implementativa, controllando il comportamento del controllore Java nei casi ordinari, nei casi anomali, nei principali casi limite e su più classi di input.
+La successiva implementazione Java + JML realizza il nucleo logico del sistema in forma eseguibile e specificata formalmente. I test JUnit 5, i test parametrici, i test derivati da scenari ATGT, i test Selenium e la Continuous Integration completano la verifica della parte implementativa.
 
 Nel complesso, il progetto integra modellazione ASM, validazione tramite scenari AVALLA e ATGT, model checking con AsmetaSMV, specifica formale tramite JML, verifica statica con OpenJML, test automatici JUnit 5, test parametrici, test Selenium dell'interfaccia web e Continuous Integration tramite GitHub Actions.
