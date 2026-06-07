@@ -137,9 +137,7 @@ La repository è organizzata nel seguente modo:
 └── Documentazione/
     ├── Requisiti e Proprieta.pdf
     ├── Guida utilizzo ascensore.pdf
-    ├── AVALLA, ATGT and AsmetaSMV Validation Report.md
     ├── AVALLA, ATGT and AsmetaSMV Validation Report.pdf
-    ├── Implementazione Java e JML.md
     ├── Implementazione Java e JML.pdf
     └── Analisi statica/
         ├── Analisi statica_1.pdf
