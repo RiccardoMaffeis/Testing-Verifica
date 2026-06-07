@@ -131,6 +131,7 @@ La repository è organizzata nel seguente modo:
 │               └── test/
 │                   ├── ControlloreAscensoreTest.java
 │                   ├── AscensoreParametricTest.java
+│                   ├── AscensoreAvallaAtgtTest.java
 │                   └── AscensoreWebSeleniumTest.java
 │
 └── Documentazione/
